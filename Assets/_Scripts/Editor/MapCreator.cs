@@ -26,7 +26,7 @@ namespace _Scripts.Editor
 
         #region Path
 
-        private const string JsonDataPath = "Assets/Resources/Data/JSON_Level_Data";
+        // private const string JsonDataPath = "Assets/Resources/Data/JSON_Level_Data";
         private const string SoDataPath = "Assets/Resources/Data/SO_Level_Data";
 
         #endregion
