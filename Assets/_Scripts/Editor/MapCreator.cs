@@ -350,7 +350,7 @@ namespace _Scripts.Editor
 
         private void RefreshBusLineUI(List<BusLineSaveData> loadedBusSequence)
         {
-            int count = 0;
+            int count = loadedBusSequence.Count;
             _busLineContainer.Clear();
             _busSequenceList.Clear();
             _busLineContainer.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);

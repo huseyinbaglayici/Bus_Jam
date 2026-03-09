@@ -1,6 +1,7 @@
 ﻿using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Interfaces;
 using _Scripts.Runtime.Managers;
+using _Scripts.Runtime.Signals;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -27,8 +28,10 @@ namespace _Scripts.Runtime.Commands
             if (loadedLevelData != null)
             {
                 _levelManager.currentLevelData = loadedLevelData;
+                ActiveLevelSignals.Instance.FireOnSetLevelTime(_levelManager.currentLevelData.Time);
 
                 //TODO: Sync with gridManager/or Signals
+                CoreGameSignals.Instance.FireOnLevelDataLoaded(loadedLevelData);
             }
 
             else

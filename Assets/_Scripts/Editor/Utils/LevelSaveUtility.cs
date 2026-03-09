@@ -98,7 +98,7 @@ namespace _Scripts.Editor.Utils
         {
             string fullPath = $"{loadPath}/Level_{levelNumber}.asset";
             LevelDataSO targetLevel = AssetDatabase.LoadAssetAtPath<LevelDataSO>(fullPath);
-            if (targetLevel == null)
+            if (targetLevel != null)
             {
                 bool confirm = EditorUtility.DisplayDialog(
                     "Delete Level",

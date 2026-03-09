@@ -8,6 +8,9 @@ namespace _Scripts.Runtime.Signals.Interfaces
         public event Action<UIPanelType, int> OnOpenPanel;
         public event Action<int> OnClosePanel;
         public event Action OnCloseAllPanels;
-
+        public event Action OnGameInitialize;
+        public event Action OnGameStart;
+        public event Action OnGameFailed;
+        public event Action OnGameSuccesfull;
     }
 }

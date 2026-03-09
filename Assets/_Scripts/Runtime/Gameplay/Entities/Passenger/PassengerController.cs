@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace _Scripts.Runtime.Gameplay.Entities.Passenger
 {
-    [RequireComponent(typeof(PassengerEntity))]
     public class PassengerController : MonoBehaviour
     {
         private StateMachine _stateMachine;
@@ -15,7 +14,15 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
 
         [SerializeField] private EntityColor startingColor;
         [SerializeField] private Vector2Int startingPosition;
+        [SerializeField] private Animator animator;
+        [SerializeField] private Renderer charModelRenderer;
 
+
+        public void SetMaterial(Material material)
+        {
+            if(!charModelRenderer) return;
+            charModelRenderer.material = material;
+        }
         private void Awake()
         {
             Entity = new PassengerEntity(startingColor, startingPosition);
@@ -27,7 +34,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
             _stateMachine = new StateMachine();
 
             var idleState = new PassengerIdleState(Entity);
-            var movingState = new PassengerMovingState(Entity, transform);
+            var movingState = new PassengerMovingState(Entity, transform, animator);
             var stuckState = new PassengerStuckState(Entity);
 
             var hasPathCondition = new HasPathPredicate(Entity);
@@ -42,11 +49,6 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
         private void Update()
         {
             _stateMachine.Update();
-        }
-
-        private void OnMouseDown()
-        {
-            PassengerSignals.Instance.FireHandleTappedPassenger(Entity);
         }
     }
 }

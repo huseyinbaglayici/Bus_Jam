@@ -1,17 +1,11 @@
 ﻿using _Scripts.Runtime.Enums;
-using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
+using UnityEngine;
 
 namespace _Scripts.Runtime.Managers
 {
-    public class UIManager : MonoSingleton<UIManager>
+    public class UIManager : MonoBehaviour
     {
-        protected new void Awake()
-        {
-            base.Awake();
-            DontDestroyOnLoad(gameObject);
-        }
-
         private void OnEnable()
         {
             SubscribeEvents();
@@ -27,17 +21,20 @@ namespace _Scripts.Runtime.Managers
             CoreGameSignals.Instance.OnLevelFailed += OnLevelFailed;
             CoreGameSignals.Instance.OnLevelSuccessful += OnLevelSuccessful;
             CoreGameSignals.Instance.OnPlay += OnPlay;
+            CoreGameSignals.Instance.OnRestartLevel += OnRestartLevel;
         }
 
         private void OnLevelInitialize(int levelValue)
         {
+            CoreUISignals.Instance.FireOnCloseAllPanels();
+            CoreUISignals.Instance.FireOnOpenPanel(UIPanelType.MainMenu, 0);
             UISignals.Instance.FireOnSetLevelValue(levelValue);
-            CoreUISignals.Instance.FireOnOpenPanel(UIPanelType.MainMenu, levelValue);
         }
 
         private void OnPlay()
         {
             CoreUISignals.Instance.FireOnOpenPanel(UIPanelType.Level, 0);
+            UISignals.Instance.FireOnSetLevelValue(SaveSignals.Instance.FireGetLevelId());
         }
 
         private void OnLevelSuccessful()
@@ -50,6 +47,12 @@ namespace _Scripts.Runtime.Managers
             CoreUISignals.Instance.FireOnOpenPanel(UIPanelType.Fail, 1);
         }
 
+        private void OnRestartLevel()
+        {
+            CoreUISignals.Instance.FireOnCloseAllPanels();
+            CoreUISignals.Instance.FireOnOpenPanel(UIPanelType.Level, 0);
+        }
+
 
         private void OnDisable()
         {
@@ -59,9 +62,10 @@ namespace _Scripts.Runtime.Managers
         private void UnSubscribeEvents()
         {
             CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitialize;
+            CoreGameSignals.Instance.OnPlay -= OnPlay;
             CoreGameSignals.Instance.OnLevelFailed -= OnLevelFailed;
             CoreGameSignals.Instance.OnLevelSuccessful -= OnLevelSuccessful;
-            CoreGameSignals.Instance.OnPlay -= OnPlay;
+            CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevel;
         }
     }
 }

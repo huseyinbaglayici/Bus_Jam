@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Signals;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Controllers
@@ -17,9 +18,9 @@ namespace _Scripts.Runtime.Controllers
 
         private void SubscribeEvents()
         {
-            CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
-            CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
-            CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
+            CoreUISignals.Instance.OnOpenPanel += OnOpenPanel;
+            CoreUISignals.Instance.OnClosePanel += OnClosePanel;
+            CoreUISignals.Instance.OnCloseAllPanels += OnCloseAllPanels;
         }
 
         private void OnOpenPanel(UIPanelType panelType, int layerValue)
@@ -32,7 +33,8 @@ namespace _Scripts.Runtime.Controllers
             }
             else
             {
-                GameObject newPanel = Instantiate(Resources.Load<GameObject>($"UIPanels/{panelType}Panel"));
+                GameObject newPanel = Instantiate(Resources.Load<GameObject>($"UIPanels/{panelType}Panel"),
+                    layers[layerValue].transform);
                 _panelCache.Add(panelType, newPanel);
             }
         }
@@ -56,6 +58,20 @@ namespace _Scripts.Runtime.Controllers
                 {
                     panel.SetActive(false);
                 }
+            }
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeEvents();
+        }
+
+        private void UnsubscribeEvents()
+        {
+            {
+                CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
+                CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
+                CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
             }
         }
     }

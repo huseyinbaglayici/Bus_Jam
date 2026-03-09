@@ -1,11 +1,10 @@
-﻿using _Scripts.Runtime.Extensions;
-using _Scripts.Runtime.Gameplay.Entities.Passenger;
+﻿using _Scripts.Runtime.Gameplay.Entities.Passenger;
 using _Scripts.Runtime.Signals;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Managers
 {
-    public class PassengerManager : MonoSingleton<PassengerManager>
+    public class PassengerManager : MonoBehaviour
     {
         private void Start()
         {

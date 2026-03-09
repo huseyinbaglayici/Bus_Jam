@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace _Scripts.Runtime.Data.ValueObjects
 {
+    [System.Serializable]
     public struct CellSaveData
     {
         public Vector2Int coordinates;

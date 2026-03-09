@@ -1,7 +1,6 @@
 ﻿using System;
 using _Scripts.Runtime.Commands;
 using _Scripts.Runtime.Data.UnityObjects;
-using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -9,49 +8,40 @@ using UnityEngine.SceneManagement;
 
 namespace _Scripts.Runtime.Managers
 {
-    public class LevelManager : MonoSingleton<LevelManager>
+    public class LevelManager : MonoBehaviour
     {
         private const string GAMEPLAY_SCENE_NAME = "GameplayScene";
 
-        [SerializeField] internal Transform levelHolder;
 
-        [HideInInspector] public LevelDataSO currentLevelData;
+        private bool _isLoading = false;
+
+        public LevelDataSO currentLevelData;
         private LevelLoaderCommand _levelLoaderCommand;
-        private LevelDestroyerCommand _levelDestroyerCommand;
 
         private int _currentLevel;
+
+        private void Awake()
+        {
+            Init();
+        }
 
         private void OnEnable()
         {
             SubscribeEvents();
 
             _currentLevel = SaveSignals.Instance.FireGetLevelId();
+            currentLevelData = SaveSignals.Instance.FireOnGetLevelData();
         }
 
-        protected new void Awake()
+        private int OnSendTimerData()
         {
-            base.Awake();
-            DontDestroyOnLoad(gameObject);
-
-            Init();
-            GetHolderIfNull();
+            return currentLevelData.Time;
         }
 
 
         private void Init()
         {
             _levelLoaderCommand = new LevelLoaderCommand(this);
-            _levelDestroyerCommand = new LevelDestroyerCommand(this);
-        }
-
-        private void GetHolderIfNull()
-        {
-            if (levelHolder != null) return;
-            Debug.LogWarning("[LevelManager] LevelHolder is null >> Creating new LevelHolder !!>>");
-            GameObject holderGo = new GameObject("LevelHolder");
-
-            holderGo.transform.SetParent(transform);
-            levelHolder = holderGo.transform;
         }
 
         private void Start()
@@ -66,6 +56,7 @@ namespace _Scripts.Runtime.Managers
             CoreGameSignals.Instance.OnLevelInitialize += OnLevelInitializeWrapper;
             CoreGameSignals.Instance.OnNextLevel += OnNextLevelWrapper;
             CoreGameSignals.Instance.OnRestartLevel += OnRestartLevelWrapper;
+            ActiveLevelSignals.Instance.OnGetLevelTime += OnSendTimerData;
         }
 
 
@@ -74,6 +65,7 @@ namespace _Scripts.Runtime.Managers
             CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitializeWrapper;
             CoreGameSignals.Instance.OnNextLevel -= OnNextLevelWrapper;
             CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevelWrapper;
+            ActiveLevelSignals.Instance.OnGetLevelTime -= OnSendTimerData;
         }
 
 
@@ -105,28 +97,34 @@ namespace _Scripts.Runtime.Managers
 
         private async UniTaskVoid OnLevelInitializeHandler(int levelParam)
         {
+            if (_isLoading) return;
+            _isLoading = true;
             await LoadGameplayScene(levelParam);
+            _isLoading = false;
+        }
+
+        private async UniTaskVoid OnNextLevelHandler()
+        {
+            if (_isLoading) return;
+            _isLoading = true;
+            _currentLevel++;
+            SaveSignals.Instance.FireSaveLevel(_currentLevel);
+            await UnloadGameplaySceneAsync();
+            CoreGameSignals.Instance.FireOnReset();
+            _isLoading = false;
+            CoreGameSignals.Instance.FireOnLevelInitialize(_currentLevel);
         }
 
         private async UniTaskVoid OnRestartLevelHandler()
         {
-            _levelDestroyerCommand.Execute();
+            if (_isLoading) return;
+            _isLoading = true;
             await UnloadGameplaySceneAsync();
             CoreGameSignals.Instance.FireOnReset();
             await LoadGameplayScene(_currentLevel);
 
             CoreGameSignals.Instance.FireOnPlay();
-        }
-
-        private async UniTaskVoid OnNextLevelHandler()
-        {
-            _currentLevel++;
-            SaveSignals.Instance.FireSaveLevel(_currentLevel);
-            _levelDestroyerCommand.Execute();
-
-            await UnloadGameplaySceneAsync();
-            CoreGameSignals.Instance.FireOnReset();
-            UISignals.Instance.FireOnSetLevelValue(_currentLevel);
+            _isLoading = false;
         }
 
         private async UniTask LoadGameplayScene(int levelParam)
@@ -135,6 +133,9 @@ namespace _Scripts.Runtime.Managers
             {
                 await SceneManager.LoadSceneAsync(GAMEPLAY_SCENE_NAME, LoadSceneMode.Additive)
                     .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+
+                Scene gameplayScene = SceneManager.GetSceneByName(GAMEPLAY_SCENE_NAME);
+                SceneManager.SetActiveScene(gameplayScene);
 
                 await _levelLoaderCommand.ExecuteAsync(levelParam);
             }

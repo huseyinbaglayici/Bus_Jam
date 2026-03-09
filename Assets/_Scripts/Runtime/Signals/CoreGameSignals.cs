@@ -1,4 +1,5 @@
 ﻿using System;
+using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals.Interfaces;
 
@@ -7,6 +8,10 @@ namespace _Scripts.Runtime.Signals
     public class CoreGameSignals : MonoSingleton<CoreGameSignals>, ICoreGameSignals
     {
         public event Action<int> OnLevelInitialize = delegate { };
+
+        public event Action<LevelDataSO> OnLevelDataLoaded = delegate { };
+
+        public event Action<LevelDataSO, UnityEngine.Vector3> OnGridReady = delegate { };
         public event Action OnPlay = delegate { };
         public event Action OnReset = delegate { };
         public event Action OnNextLevel = delegate { };
@@ -16,6 +21,11 @@ namespace _Scripts.Runtime.Signals
 
 
         public void FireOnLevelInitialize(int levelValue) => OnLevelInitialize?.Invoke(levelValue);
+
+        public void FireOnLevelDataLoaded(LevelDataSO levelData) => OnLevelDataLoaded?.Invoke(levelData);
+
+        public void FireOnGridReady(LevelDataSO levelData, UnityEngine.Vector3 gridPosition) =>
+            OnGridReady?.Invoke(levelData, gridPosition);
 
         public void FireOnPlay() => OnPlay.Invoke();
 

@@ -7,21 +7,25 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.States
     {
         private readonly PassengerEntity _entity;
         private readonly Transform _transform;
+        private readonly Animator _animator;
         private const float Speed = 5f;
 
+        private static readonly int IsMovingHash = Animator.StringToHash("isMoving");
 
-        public PassengerMovingState(PassengerEntity entity, Transform transform)
+
+        public PassengerMovingState(PassengerEntity entity, Transform transform, Animator animator)
         {
             _entity = entity;
             _transform = transform;
+            _animator = animator;
         }
 
         public void OnEnter()
         {
             _entity.IsTapped = false;
+            _animator.SetBool(IsMovingHash, true);
             if (_entity.CurrentTarget == PassengerTargetType.Bus)
             {
-                // bus walk logic
             }
 
             else if (_entity.CurrentTarget == PassengerTargetType.Line)
@@ -40,6 +44,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.States
 
         public void OnExit()
         {
+            _animator.SetBool(IsMovingHash, false);
         }
     }
 }
