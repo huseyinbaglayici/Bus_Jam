@@ -35,11 +35,8 @@ namespace _Scripts.Runtime.Utils
                 x = (widthParam - 1) / 2f,
                 y = (heightParam - 1) / 2f
             };
-            return new Vector3(
-                center.x * spaceModifierParam,
-                0,
-                center.y * spaceModifierParam
-            );
+            Debug.Log($"Calculated Grid Center (Grid Coordinates): {center}");
+            return GridToWorldPosition(new Vector2Int((int)center.x, (int)center.y), spaceModifierParam);
         }
 
         public static Vector3 CalculateQueuePosition(Vector3 activeBusPos, Vector3 queueSpacing, int queueIndex)

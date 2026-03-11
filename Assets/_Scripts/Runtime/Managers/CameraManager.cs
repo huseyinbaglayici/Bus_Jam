@@ -27,10 +27,12 @@ namespace _Scripts.Runtime.Managers
         private void SetCameraPosition(Vector3 gridCenter)
         {
             _virtualCamera.transform.position = new Vector3(
-                gridCenter.x + offset.x, 
-                gridCenter.y + offset.y,
-                gridCenter.z + offset.z
+                gridCenter.z + offset.x, 
+                10, // todo:get y in variable
+                gridCenter.x + offset.z 
             );
+
+            
         }
 
         private void OnDisable() => CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
