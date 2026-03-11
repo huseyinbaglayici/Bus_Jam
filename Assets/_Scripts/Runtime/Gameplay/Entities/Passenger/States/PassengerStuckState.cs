@@ -18,7 +18,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.States
         {
             _entity.IsTapped = false;
             _stuckTimer = 0f;
-            //trigger anim later on
+            Debug.LogWarning("HRRR");
         }
 
         public void Update()
@@ -26,6 +26,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.States
             _stuckTimer += Time.deltaTime;
         }
 
-        public void OnExit() { }
+        public void OnExit()
+        {
+        }
     }
 }

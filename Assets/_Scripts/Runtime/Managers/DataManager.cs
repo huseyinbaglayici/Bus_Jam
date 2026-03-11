@@ -1,14 +1,12 @@
 ﻿using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Signals;
+using _Scripts.Runtime.Utils;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Managers
 {
     public class DataManager : MonoBehaviour
     {
-        private const string LEVEL_KEY = "CurrentLevelId";
-        private const string LEVEL_PATH = "Data/SO_Level_Data/Level_";
-
         private void OnEnable()
         {
             SaveSignals.Instance.OnSaveLevel += SaveLevel;
@@ -18,18 +16,18 @@ namespace _Scripts.Runtime.Managers
 
         private int GetLevelId()
         {
-            return PlayerPrefs.GetInt(LEVEL_KEY, 1);
+            return PlayerPrefs.GetInt(ConstantUtil.LEVEL_KEY, 1);
         }
 
         private void SaveLevel(int newLevelId)
         {
-            PlayerPrefs.SetInt(LEVEL_KEY, newLevelId);
+            PlayerPrefs.SetInt(ConstantUtil.LEVEL_KEY, newLevelId);
             PlayerPrefs.Save();
         }
 
         private LevelDataSO GetLevelData()
         {
-            return Resources.Load<LevelDataSO>($"{LEVEL_PATH}{GetLevelId()}");
+            return Resources.Load<LevelDataSO>($"{ConstantUtil.LEVEL_PATH}{GetLevelId()}");
         }
 
 

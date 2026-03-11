@@ -13,7 +13,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.Conditions
 
         public bool Evaluate()
         {
-            return _entity.IsTapped && _entity.IsMoveable;
+            return _entity.HasPath();
         }
     }
 }

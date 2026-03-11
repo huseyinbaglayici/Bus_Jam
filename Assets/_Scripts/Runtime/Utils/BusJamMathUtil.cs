@@ -16,13 +16,16 @@ namespace _Scripts.Runtime.Utils
 
         public static Vector3 GridToWorldPosition(Vector2Int gridPosition, float spaceModifier = 1)
         {
-            return new Vector3(gridPosition.x, 0, gridPosition.y);
+            return new Vector3(
+                gridPosition.x * spaceModifier,
+                0,
+                gridPosition.y * spaceModifier
+            );
         }
 
         public static Vector3 GetCenterOfGrid(int widthParam, int heightParam, float spaceModifierParam = 1)
         {
-            Vector3 centerOfGrid = GetGridCenter(widthParam, heightParam, spaceModifierParam);
-            return centerOfGrid;
+            return GetGridCenter(widthParam, heightParam, spaceModifierParam);
         }
 
         private static Vector3 GetGridCenter(int widthParam, int heightParam, float spaceModifierParam = 1)
@@ -32,7 +35,22 @@ namespace _Scripts.Runtime.Utils
                 x = (widthParam - 1) / 2f,
                 y = (heightParam - 1) / 2f
             };
-            return new Vector3(center.x * spaceModifierParam, center.y * spaceModifierParam);
+            return new Vector3(
+                center.x * spaceModifierParam,
+                0,
+                center.y * spaceModifierParam
+            );
+        }
+
+        public static Vector3 CalculateQueuePosition(Vector3 activeBusPos, Vector3 queueSpacing, int queueIndex)
+        {
+            return activeBusPos + (queueSpacing * (queueIndex + 1));
+        }
+
+        public static float GetGridTopEdgeZ(Vector3 gridCenter, int heightParam, float spaceModifierParam = 1f)
+        {
+            float halfHeight = (heightParam * spaceModifierParam) / 2f;
+            return gridCenter.z + halfHeight;
         }
     }
 }

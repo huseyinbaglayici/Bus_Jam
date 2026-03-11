@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 1662802077606476830}
   - component: {fileID: 2420910480093595459}
   - component: {fileID: 4813623613050460775}
-  - component: {fileID: 8341024678723098665}
   - component: {fileID: 7874934694874947116}
   m_Layer: 0
   m_Name: PassengerCell
@@ -86,27 +85,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &8341024678723098665
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 295913505758752423}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &7874934694874947116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123,6 +101,7 @@ MonoBehaviour:
   startingPosition: {x: 0, y: 0}
   animator: {fileID: 3463109713727748471}
   charModelRenderer: {fileID: 1837022077407768090}
+  charModel: {fileID: 5792444721840326041}
 --- !u!1001 &6675333111937251528
 PrefabInstance:
   m_ObjectHideFlags: 0

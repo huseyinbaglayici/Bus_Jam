@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using _Scripts.Runtime.Signals;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,6 +10,15 @@ namespace _Scripts.Runtime.Managers
     {
         [SerializeField] private bool _isAvailableForTouch = true;
         [SerializeField] private bool _isFirstTouchTaken;
+
+        private Camera _mainCamera;
+        private Plane _groundPlane;
+
+        private void Awake()
+        {
+            _mainCamera = Camera.main;
+            _groundPlane = new Plane(Vector3.up, Vector3.zero);
+        }
 
         private void OnEnable()
         {
@@ -55,8 +65,21 @@ namespace _Scripts.Runtime.Managers
                     CoreGameSignals.Instance.FireOnPlay();
                 }
 
-                InputSignals.Instance.FireOnInputTaken(Input.mousePosition);
+                Vector3 hitPoint = GetWorldPositionFromMouse();
+
+                InputSignals.Instance.FireOnInputTaken(hitPoint);
             }
+        }
+
+        private Vector3 GetWorldPositionFromMouse()
+        {
+            Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (_groundPlane.Raycast(ray, out float distance))
+            {
+                return ray.GetPoint(distance);
+            }
+
+            return Vector3.zero;
         }
 
         private bool IsPointerOverUIObject()

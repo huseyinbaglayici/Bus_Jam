@@ -11,7 +11,7 @@ namespace _Scripts.Runtime.Signals
 
         public event Action<LevelDataSO> OnLevelDataLoaded = delegate { };
 
-        public event Action<LevelDataSO, UnityEngine.Vector3> OnGridReady = delegate { };
+        public event Action<LevelDataSO> OnGridReady = delegate { };
         public event Action OnPlay = delegate { };
         public event Action OnReset = delegate { };
         public event Action OnNextLevel = delegate { };
@@ -24,8 +24,8 @@ namespace _Scripts.Runtime.Signals
 
         public void FireOnLevelDataLoaded(LevelDataSO levelData) => OnLevelDataLoaded?.Invoke(levelData);
 
-        public void FireOnGridReady(LevelDataSO levelData, UnityEngine.Vector3 gridPosition) =>
-            OnGridReady?.Invoke(levelData, gridPosition);
+        public void FireOnGridReady(LevelDataSO levelData) =>
+            OnGridReady?.Invoke(levelData);
 
         public void FireOnPlay() => OnPlay.Invoke();
 

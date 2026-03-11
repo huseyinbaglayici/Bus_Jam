@@ -5,6 +5,7 @@ namespace _Scripts.Runtime.Signals.Interfaces
 {
     public interface IPassengerSignals
     {
-        event Action<PassengerEntity> OnHandleTappedPassenger;
+        public event Action<PassengerEntity> OnHandleTappedPassenger;
+        public event Action<UnityEngine.Vector2Int,PassengerController> OnRegisterPassenger;
     }
 }

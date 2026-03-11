@@ -1,8 +1,8 @@
-﻿using _Scripts.Core;
+﻿using System.Collections.Generic;
+using _Scripts.Core;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Gameplay.Entities.Passenger.Conditions;
 using _Scripts.Runtime.Gameplay.Entities.Passenger.States;
-using _Scripts.Runtime.Signals;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Gameplay.Entities.Passenger
@@ -16,39 +16,55 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
         [SerializeField] private Vector2Int startingPosition;
         [SerializeField] private Animator animator;
         [SerializeField] private Renderer charModelRenderer;
+        [SerializeField] private GameObject charModel;
 
+        private PassengerIdleState _idleState;
+        private PassengerMovingState _movingState;
+        private PassengerStuckState _stuckState;
 
-        public void SetMaterial(Material material)
+        public void Initialize(Material material, EntityColor entityColor, Vector2Int position)
         {
-            if(!charModelRenderer) return;
-            charModelRenderer.material = material;
-        }
-        private void Awake()
-        {
+            if (charModelRenderer)
+            {
+                charModelRenderer.material = material;
+            }
+
+            startingColor = entityColor;
+            startingPosition = position;
             Entity = new PassengerEntity(startingColor, startingPosition);
             InitStateMachine();
         }
+
 
         private void InitStateMachine()
         {
             _stateMachine = new StateMachine();
 
-            var idleState = new PassengerIdleState(Entity);
-            var movingState = new PassengerMovingState(Entity, transform, animator);
-            var stuckState = new PassengerStuckState(Entity);
+            _idleState = new PassengerIdleState(Entity);
+            _movingState = new PassengerMovingState(Entity, charModel.transform, animator);
+            _stuckState = new PassengerStuckState(Entity);
 
             var hasPathCondition = new HasPathPredicate(Entity);
             var isBlockedCondition = new IsBlockedPredicate(Entity);
 
-            _stateMachine.AddTransition(idleState, movingState, hasPathCondition);
-            _stateMachine.AddTransition(idleState, stuckState, isBlockedCondition);
+            _stateMachine.AddTransition(_idleState, _movingState, hasPathCondition);
+            _stateMachine.AddTransition(_idleState, _stuckState, isBlockedCondition);
 
-            _stateMachine.SetState(idleState);
+            _stateMachine.SetState(_idleState);
         }
 
         private void Update()
         {
             _stateMachine.Update();
+        }
+
+        public void RedirectToBus(Vector3 busPosition)
+        {
+            Entity.CurrentTarget = PassengerTargetType.Bus;
+            Entity.PathPoints.Clear();
+            Entity.SetPath(new List<Vector3> { busPosition });
+
+            _stateMachine.SetState(_movingState);
         }
     }
 }

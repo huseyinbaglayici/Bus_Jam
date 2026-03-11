@@ -27,17 +27,19 @@ namespace _Scripts.Runtime.Factories
             }
         }
 
-        public void CreateCell(CellSaveData cellData, Transform parent, Vector3 position, float spaceModifier = 1)
+        public GameObject CreateCell(CellSaveData cellData, Transform parent, Vector3 position)
         {
             GameObject prefabToSpawn = DeterminePrefab(cellData);
-            GameObject spawnedCell = Object.Instantiate(prefabToSpawn,
-                new Vector3(position.x * spaceModifier, position.y, position.z * spaceModifier), Quaternion.identity,
-                parent);
+
+            GameObject spawnedCell = Object.Instantiate(prefabToSpawn, position, Quaternion.identity, parent);
 
             if (cellData.occupant == OccupantType.Passenger)
             {
-                ApplyColor(spawnedCell, cellData.color);
+                Vector2Int passengerGridPos = new Vector2Int(cellData.coordinates.x, cellData.coordinates.y);
+                ConfigureCell(spawnedCell, cellData.color, passengerGridPos);
             }
+
+            return spawnedCell;
         }
 
         private GameObject DeterminePrefab(CellSaveData cellData)
@@ -51,13 +53,13 @@ namespace _Scripts.Runtime.Factories
         }
 
 
-        private void ApplyColor(GameObject spawnedEntity, EntityColor colorEnum)
+        private void ConfigureCell(GameObject spawnedEntity, EntityColor colorEnum, Vector2Int position)
         {
             if (_colorMap.TryGetValue(colorEnum, out var material))
             {
                 if (spawnedEntity.TryGetComponent(out PassengerController controller))
                 {
-                    controller.SetMaterial(material);
+                    controller.Initialize(material, colorEnum, position);
                 }
             }
             else

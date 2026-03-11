@@ -275,13 +275,13 @@ namespace _Scripts.Editor
             _isEditMode = false;
             _currentLevelId = -1;
             _cellDataMatrix = new CellSaveData[x, y];
-            for (int i = 0; i < x; i++)
+            for (int iX = 0; iX < x; iX++)
             {
-                for (int j = 0; j < y; j++)
+                for (int iY = 0; iY < y; iY++)
                 {
-                    _cellDataMatrix[i, j] = new CellSaveData
+                    _cellDataMatrix[iX, iY] = new CellSaveData
                     {
-                        coordinates = new Vector2Int(i, j),
+                        coordinates = new Vector2Int(iX, iY),
                         type = CellType.Walkable,
                         occupant = OccupantType.Empty,
                         color = EntityColor.Default
@@ -440,13 +440,13 @@ namespace _Scripts.Editor
         }
 
 
-        private void RefreshGridUI(int rows, int cols)
+        private void RefreshGridUI(int widthX, int widthY)
         {
             _gridContainer.Clear();
-            for (int y = cols - 1; y >= 0; y--)
+            for (int y = widthY - 1; y >= 0; y--)
             {
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-                for (int x = 0; x < rows; x++)
+                for (int x = 0; x < widthX; x++)
                 {
                     int posX = x;
                     int posY = y;
