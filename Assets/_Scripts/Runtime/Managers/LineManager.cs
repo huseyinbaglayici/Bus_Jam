@@ -26,7 +26,8 @@ namespace _Scripts.Runtime.Managers
     {
         [SerializeField] private GameObject lineCellPrefab;
         private const float CellSpacing = 1.1f;
-        private const float LineZOffset = 5f;
+        private const float LineZOffset = 1f;
+        private const float XMultiplier = 2.5f;
 
         private readonly List<GameObject> _lineCells = new List<GameObject>();
         private readonly List<LineSlot> _lineSlots = new List<LineSlot>();
@@ -120,39 +121,37 @@ namespace _Scripts.Runtime.Managers
 
         #region Line Initialization
 
-        private void GenerateLine(LevelDataSO levelData)
+        private void GenerateLine(LevelDataSO levelData, int gridXCount, int gridZCount)
         {
             CreateHolder();
             _lineLimit = levelData.PassengerLineCapacity;
-            _lineHolder.position = Vector3.zero;
+            float gridCenterX = ((gridXCount - 1) * XMultiplier) / 2f;
+            float gridTopZ = (gridZCount - 1) * 1.1f;
+            float finalZPosition = gridTopZ + LineZOffset;
+            _lineHolder.position = new Vector3(gridCenterX, 0, finalZPosition);
             SpawnLineCells(levelData.PassengerLineCapacity);
         }
 
         private void SpawnLineCells(int capacity)
         {
+            foreach (var cell in _lineCells) Destroy(cell);
             _lineCells.Clear();
             _lineSlots.Clear();
+
+            float totalWidth = (capacity - 1) * CellSpacing;
+            float startX = -(totalWidth / 2f);
+
             for (int i = 0; i < capacity; i++)
             {
-                float localX = i * CellSpacing;
+                float localX = startX + (i * CellSpacing);
                 Vector3 localPos = new Vector3(localX, 0, 0);
 
                 GameObject spawnedLineCell = _lineFactory.CreateLineCell(_lineHolder, localPos);
-
                 spawnedLineCell.transform.localPosition = localPos;
 
                 _lineCells.Add(spawnedLineCell);
-
-                _lineSlots.Add(new LineSlot(Vector3.zero));
-            }
-
-            float totalWidth = (capacity - 1) * CellSpacing;
-            float offsetX = -(totalWidth / 2f);
-            _lineHolder.position = new Vector3(offsetX, 0, LineZOffset);
-
-            for (int i = 0; i < capacity; i++)
-            {
-                _lineSlots[i].WorldPosition = _lineCells[i].transform.position;
+        
+                _lineSlots.Add(new LineSlot(spawnedLineCell.transform.position));
             }
         }
 

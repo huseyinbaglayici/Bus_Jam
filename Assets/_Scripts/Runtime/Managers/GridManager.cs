@@ -56,9 +56,8 @@ namespace _Scripts.Runtime.Managers
             GridSize = FetchGridParams(levelData);
 
             SpawnConcreteCells(levelData);
-
-            CoreGameSignals.Instance.FireOnGridReady(levelData);
-            var centerOfGrid = BusJamMathUtil.GetCenterOfGrid(GridSize.x, GridSize.y, 1.21f);
+            CoreGameSignals.Instance.FireOnGridReady(levelData, GridSize.x, GridSize.y);
+            var centerOfGrid = BusJamMathUtil.GetCenterOfGrid(GridSize.x, GridSize.y, ConstantUtil.SpaceModifier);
             CameraSignals.Instance.FireOnSetCameraZoom(GridSize.x, GridSize.y);
             CameraSignals.Instance.FireOnSetCameraPosition(centerOfGrid);
         }

@@ -24,10 +24,13 @@ namespace _Scripts.Runtime.Managers
         private void OnEnable() => CameraSignals.Instance.OnSetCameraPosition += SetCameraPosition;
 
 
-        private void SetCameraPosition(Vector3 position)
+        private void SetCameraPosition(Vector3 gridCenter)
         {
-            float z = transform.position.z;
-            _virtualCamera.transform.position = new Vector3(position.x + offset.x, position.y + offset.y, z + offset.z);
+            _virtualCamera.transform.position = new Vector3(
+                gridCenter.x + offset.x, 
+                gridCenter.y + offset.y,
+                gridCenter.z + offset.z
+            );
         }
 
         private void OnDisable() => CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;

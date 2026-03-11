@@ -16,7 +16,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
         [SerializeField] private List<EntityColorData> colorDatabase;
 
-        private const float StationZOffset = 7f;
+        private const float StationZOffset = 5.5f;
         private const float StationXOffset = 5f;
         private const float StationYOffset = 1.10f;
 
@@ -25,8 +25,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private BusFactory _busFactory;
         private Queue<BusController> _busQueue = new Queue<BusController>();
         private BusController _activeBus;
-
-        private Vector3 _pivotCorrectionOffset = new Vector3(1.2f, 0, 0);
+        private readonly Vector3 _pivotCorrectionOffset = new Vector3(1.2f, 0, 0);
+        private const float XMultiplier = 1.3f;
         private Vector3 _activeBusPosition;
         private Vector3 _queueSpacing;
 
@@ -52,10 +52,13 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             CoreGameSignals.Instance.OnPlay += HandleBusSeq;
         }
 
-        private void GenerateBusses(LevelDataSO levelData)
+        private void GenerateBusses(LevelDataSO levelData, int gridXCount, int gridZCount)
         {
             CreateHolder();
-            _activeBusPosition = new Vector3(0, StationYOffset, StationZOffset) + _pivotCorrectionOffset;
+            float gridCenterX = ((gridXCount - 1) * XMultiplier) / 2f;
+            float gridTopZ = (gridZCount - 1) * 1.1f;
+            float finalBusZ = gridTopZ + StationZOffset;
+            _activeBusPosition = new Vector3(gridCenterX, StationYOffset, finalBusZ) + _pivotCorrectionOffset;
 
             SpawnConcreteBusses(levelData);
         }
