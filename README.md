@@ -1,16 +1,24 @@
-# 🚌 Bus Jam
+#  Bus Jam
 
 A mobile puzzle game built as a technical case study, replicating the core mechanics of Rollic Games' *Bus Jam*.
 
-## 🎮 Gameplay
+## Gameplay
 
-> 📹 **Gameplay Video** → [![Gameplay](https://img.shields.io/badge/Watch-Drive-4285F4?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1MU_xMo4q0vvA7sfVYtXXZ24bEqDCa36z/view?usp=sharing)
+<div align="center">
 
-> 🎬 **Level Editor** → ![Level Editor](screenshots/editor.png)
+[![Watch Gameplay](https://img.shields.io/badge/Watch%20Gameplay-Google%20Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1MU_xMo4q0vvA7sfVYtXXZ24bEqDCa36z/view?usp=sharing)
+
+</div>
 
 ---
 
-## 🛠️ Tech Stack
+**Level Editor**
+
+![Level Editor](screenshots/editor.png)
+
+---
+
+##  Tech Stack
 
 | | |
 |---|---|
@@ -22,19 +30,25 @@ A mobile puzzle game built as a technical case study, replicating the core mecha
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The project uses a **signal-driven, decoupled architecture**. Systems never reference each other directly — all communication goes through typed signal classes.
 
 ### Key Design Decisions
 
-> ⭐ **No Singleton on Managers** — Managers are plain `MonoBehaviour`s wired through signals. No hidden global state, no tight coupling. Adding or removing a manager from the scene never breaks anything else.
+### No Singleton on Managers
+Managers are plain `MonoBehaviour`s wired through signals. No hidden global state, no tight coupling. Adding or removing a manager from the scene never breaks anything else.
 
-> ⭐ **ScriptableObject-based Level Data** — Each level is a `LevelDataSO` asset. No prefabs, no scene dependencies. Levels are pure data, created and edited entirely through the custom editor tool.
+### ScriptableObject-based Level Data
+Each level is a `LevelDataSO` asset. No prefabs, no scene dependencies. Levels are pure data, created and edited entirely through the custom editor tool.
 
-> ⭐ **Custom Level Editor** — `MapCreator` is a UI Toolkit `EditorWindow` for painting grid layouts, placing passengers, and configuring the bus queue — all saved directly to a `LevelDataSO` asset.
+### Custom Level Editor
+`MapCreator` is a UI Toolkit `EditorWindow` for painting grid layouts, placing passengers, and configuring the bus queue — all saved directly to a `LevelDataSO` asset.
 
-> ⭐ **Seamless Level Transitions** — The gameplay scene loads additively in the background while the UI stays active. No loading screen between levels.
+### Seamless Level Transitions
+The gameplay scene loads additively in the background while the UI stays active. No loading screen between levels.
+
+---
 
 **Signal-based communication** — Each domain has its own signal class. Managers subscribe and emit without knowing who's listening. Systems stay independent by design.
 
@@ -46,7 +60,7 @@ The project uses a **signal-driven, decoupled architecture**. Systems never refe
 
 ---
 
-## 📐 Architecture Diagrams
+## Architecture Diagrams
 
 ### 1 — System Architecture
 
@@ -263,7 +277,7 @@ classDiagram
 
 ---
 
-## 📁 Project Structure
+## Project Folder Structure
 
 <details>
 <summary>Click to expand</summary>
