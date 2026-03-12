@@ -61,6 +61,10 @@ Assets/StreamingAssets/aa/*
 *.mdb
 *.opendb
 *.VC.db
+.vscode/
+.DS_Store
+Packages/packages-lock.json
+
 
 # Gradle cache directory
 .gradle/
