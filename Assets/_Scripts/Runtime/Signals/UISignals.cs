@@ -1,10 +1,9 @@
 ﻿using System;
 using _Scripts.Runtime.Extensions;
-using _Scripts.Runtime.Signals.Interfaces;
 
 namespace _Scripts.Runtime.Signals
 {
-    public class UISignals : MonoSingleton<UISignals>, IUISignals
+    public class UISignals : MonoSingleton<UISignals>
     {
         public event Action<int> OnSetLevelValue = delegate { };
         public event Action<int> OnSetTimerValue = delegate { };

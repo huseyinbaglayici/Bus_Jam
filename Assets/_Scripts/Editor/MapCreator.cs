@@ -14,25 +14,12 @@ namespace _Scripts.Editor
     {
         #region Constants
 
-        #region Colors
-
         private const string TitleColorHex = "#FF9F00";
         private const string GridBtnTextColorHex = "#FFFFFF";
         private const string GridBtnBackgroundColorHex = "#00C2FF";
         private const string SaveBtnBackgroundColorHex = "#39B33F";
         private const string DeleteBtnBackgroundColorHex = "#E55353";
-
-        #endregion
-
-        #region Path
-
-        // private const string JsonDataPath = "Assets/Resources/Data/JSON_Level_Data";
         private const string SoDataPath = "Assets/Resources/Data/SO_Level_Data";
-
-        #endregion
-
-        #region Strings
-
         private const string HeaderTitleText = "Bus Jam Level Creator";
         private const string HelpBoxText = "Enter parameters to initialize grid.";
         private const string GridBtnText = "Draw Grid";
@@ -41,33 +28,11 @@ namespace _Scripts.Editor
         private const string GetLevelNumberText = "Existing Level Id";
         private const string GetLevelBtnText = "Get Existing Level";
         private const string DeleteSelectedLevelBtnText = "Delete Selected Level";
-
-        #endregion
-
-        #region Default UI values
-
         private const int DefaultIntValue = 5;
         private const int DefaultTimerValue = 45;
         private const float DefaultMargin = 10f;
 
-        #endregion
-
-        #region Fields
-
-        private IntegerField _xField, _yField, _busLineField, _passengerLineField, _timerLineField, _existingLevelField;
-
-        private CellSaveData[,] _cellDataMatrix;
-        private List<BusLineSaveData> _busSequenceList = new List<BusLineSaveData>();
-
-        private OccupantType _brushOccupant = OccupantType.Empty;
-        private EntityColor _brushColor = EntityColor.Default;
-        private EntityColor _bushColorSelection = EntityColor.Default;
-        private bool _isPainting = false;
-
-        private bool _isEditMode = false;
-        private int _currentLevelId = -1;
-
-        private static readonly Dictionary<EntityColor, (Color bg, Color Text)> ColorLookup = new()
+        private static readonly Dictionary<EntityColor, (Color bg, Color text)> ColorLookup = new()
         {
             { EntityColor.White, (Color.white, Color.black) },
             { EntityColor.Blue, (Color.blue, Color.white) },
@@ -77,17 +42,26 @@ namespace _Scripts.Editor
             { EntityColor.Default, (new Color(0.15f, 0.15f, 0.15f), Color.white) }
         };
 
+        #endregion
+
+        #region Fields
+
+        private IntegerField _xField, _yField, _busLineField, _passengerLineField, _timerLineField, _existingLevelField;
+        private CellSaveData[,] _cellDataMatrix;
+        private List<BusLineSaveData> _busSequenceList = new();
+        private OccupantType _brushOccupant = OccupantType.Empty;
+        private EntityColor _brushColor = EntityColor.Default;
+        private EntityColor _brushColorSelection = EntityColor.Default;
+        private bool _isPainting;
+        private bool _isEditMode;
+        private int _currentLevelId = -1;
         private ScrollView _mainScrollView;
         private VisualElement _busLineContainer;
         private VisualElement _passengerLineContainer;
-        private Label _passengerCountLabel;
         private VisualElement _gridContainer;
-        private VisualElement _createLevel;
+        private Label _passengerCountLabel;
 
         #endregion
-
-        #endregion
-
 
         [MenuItem("CustomTools/BusJam Level Creation Tool")]
         public static void ShowWindow() => GetWindow<MapCreator>();
@@ -95,21 +69,16 @@ namespace _Scripts.Editor
         public void CreateGUI()
         {
             var root = rootVisualElement;
-
             SetupHeaderAndSettings(root);
             SetupDrawingArea(root);
             root.Add(CreateFooterSection());
-
             root.RegisterCallback<PointerUpEvent>(evt =>
             {
-                if (evt.button == 0)
-                {
-                    _isPainting = false;
-                }
+                if (evt.button == 0) _isPainting = false;
             });
         }
 
-        #region Setup Methods
+        #region Setup
 
         private void SetupHeaderAndSettings(VisualElement root)
         {
@@ -122,79 +91,14 @@ namespace _Scripts.Editor
             root.Add(CreateActionButtonRow());
         }
 
-        private VisualElement CreateEditExistingLevelSection()
-        {
-            var container = CreateSectionContainer("Enter Existing Level ID");
-
-            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
-            _existingLevelField = CreateCustomIntField(GetLevelNumberText, DefaultIntValue, 0.5f);
-            SetFieldToVertical(_existingLevelField);
-            var getBtn = CreateGenerateButton(GetLevelBtnText, () => GetDesiredLevel(_existingLevelField.value));
-
-            var deleteBtn = CreateGenerateButton(DeleteSelectedLevelBtnText,
-                () => DeleteDesiredLevel(_existingLevelField.value), "#FFFFFF", DeleteBtnBackgroundColorHex);
-
-            row.Add(_existingLevelField);
-            row.Add(getBtn);
-            row.Add(deleteBtn);
-            container.Add(row);
-            return container;
-        }
-
-
-        private VisualElement CreatePaletteSection()
-        {
-            var container = CreateSectionContainer("Brush Palette");
-            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
-            var occupantField = new EnumField("Occupant", _brushOccupant) { style = { flexGrow = 1, marginRight = 5 } };
-            EnumFieldLabelAdjust(occupantField);
-            var colorField = new EnumField("Color", _brushColor) { style = { flexGrow = 1 } };
-            EnumFieldLabelAdjust(colorField);
-
-            occupantField.RegisterValueChangedCallback(evt =>
-            {
-                _brushOccupant = (OccupantType)evt.newValue;
-
-                bool needsColor = _brushOccupant == OccupantType.Passenger;
-                colorField.SetEnabled(needsColor);
-
-                if (!needsColor)
-                {
-                    _brushColor = EntityColor.Default;
-                    colorField.value = _brushColor;
-                }
-            });
-            colorField.RegisterValueChangedCallback(evt => _brushColor = (EntityColor)evt.newValue);
-
-            colorField.SetEnabled(_brushOccupant == OccupantType.Passenger);
-
-
-            row.Add(occupantField);
-            row.Add(colorField);
-            container.Add(row);
-
-            return container;
-        }
-
-        private void EnumFieldLabelAdjust(EnumField field)
-        {
-            var label = field.labelElement;
-            if (label != null)
-            {
-                label.style.minWidth = 0;
-                label.style.width = StyleKeyword.Auto;
-                label.style.marginRight = 5;
-            }
-        }
-
         private void SetupDrawingArea(VisualElement root)
         {
             _mainScrollView = new ScrollView(ScrollViewMode.VerticalAndHorizontal)
             {
                 style =
                 {
-                    marginTop = DefaultMargin, flexGrow = 1, borderTopWidth = 1,
-                    borderTopColor = new Color(0.15f, 0.15f, 0.15f)
+                    marginTop = DefaultMargin, flexGrow = 1,
+                    borderTopWidth = 1, borderTopColor = new Color(0.15f, 0.15f, 0.15f)
                 }
             };
 
@@ -205,44 +109,38 @@ namespace _Scripts.Editor
 
             _passengerCountLabel = new Label();
             _passengerLineContainer.Add(_passengerCountLabel);
+
             _gridContainer = new VisualElement { style = { marginTop = 15, alignItems = Align.Center } };
 
             _mainScrollView.Add(_busLineContainer);
             _mainScrollView.Add(_passengerLineContainer);
             _mainScrollView.Add(_gridContainer);
-
             root.Add(_mainScrollView);
         }
 
         #endregion
 
-        #region Action Methods
+        #region Actions
 
         private void GetDesiredLevel(int levelNumber)
         {
             LevelDataSO loadedLevel = LevelSaveUtility.GetSelectedLevel(levelNumber, SoDataPath);
-            if (loadedLevel)
-            {
-                _isEditMode = true;
-                _currentLevelId = levelNumber;
-                LoadLevelDataIntoUI(loadedLevel);
-            }
+            if (!loadedLevel) return;
+            _isEditMode = true;
+            _currentLevelId = levelNumber;
+            LoadLevelDataIntoUI(loadedLevel);
         }
-
 
         private void DeleteDesiredLevel(int levelNumber)
         {
-            bool isDeleted = LevelSaveUtility.DeleteSelectedLevel(levelNumber, SoDataPath);
+            if (!LevelSaveUtility.DeleteSelectedLevel(levelNumber, SoDataPath)) return;
+            if (!_isEditMode || _currentLevelId != levelNumber) return;
 
-            if (isDeleted && _isEditMode && _currentLevelId == levelNumber)
-            {
-                _isEditMode = false;
-                _gridContainer.Clear();
-                _busLineContainer.Clear();
-                _passengerLineContainer.style.display = DisplayStyle.None;
-                _cellDataMatrix = null;
-                Debug.Log("Deleted currently editing level. UI cleared.");
-            }
+            _isEditMode = false;
+            _gridContainer.Clear();
+            _busLineContainer.Clear();
+            _passengerLineContainer.style.display = DisplayStyle.None;
+            _cellDataMatrix = null;
         }
 
         private void LoadLevelDataIntoUI(LevelDataSO levelData)
@@ -275,18 +173,17 @@ namespace _Scripts.Editor
             _isEditMode = false;
             _currentLevelId = -1;
             _cellDataMatrix = new CellSaveData[x, y];
+
             for (int iX = 0; iX < x; iX++)
+            for (int iY = 0; iY < y; iY++)
             {
-                for (int iY = 0; iY < y; iY++)
+                _cellDataMatrix[iX, iY] = new CellSaveData
                 {
-                    _cellDataMatrix[iX, iY] = new CellSaveData
-                    {
-                        coordinates = new Vector2Int(iX, iY),
-                        type = CellType.Walkable,
-                        occupant = OccupantType.Empty,
-                        color = EntityColor.Default
-                    };
-                }
+                    coordinates = new Vector2Int(iX, iY),
+                    type = CellType.Walkable,
+                    occupant = OccupantType.Empty,
+                    color = EntityColor.Default
+                };
             }
 
             RefreshGridUI(x, y);
@@ -294,140 +191,59 @@ namespace _Scripts.Editor
 
         private void RefreshBusLineUI(int count)
         {
+            var sequence = new List<BusLineSaveData>();
+            for (int i = 0; i < count; i++)
+                sequence.Add(new BusLineSaveData { order = count - i, color = EntityColor.Default });
+
+            RefreshBusLineUI(sequence);
+        }
+
+        private void RefreshBusLineUI(List<BusLineSaveData> busSequence)
+        {
             _busLineContainer.Clear();
             _busSequenceList.Clear();
             _busLineContainer.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-            var busLineLabel = new Label("Bus Line ➔")
+
+            _busLineContainer.Add(new Label("Bus Line ➔")
             {
                 style =
                 {
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    marginLeft = 10,
-                    color = new Color(0.8f, 0.8f, 0.8f),
+                    unityFontStyleAndWeight = FontStyle.Bold, marginLeft = 10, color = new Color(0.8f, 0.8f, 0.8f)
                 }
-            };
-            _busLineContainer.Add(busLineLabel);
+            });
 
-            var busColorField = new EnumField(_bushColorSelection)
-            {
-                style = { width = 60, marginRight = 10 }
-            };
+            var busColorField = new EnumField(_brushColorSelection) { style = { width = 60, marginRight = 10 } };
             EnumFieldLabelAdjust(busColorField);
-
-            busColorField.RegisterValueChangedCallback(evt => { _bushColorSelection = (EntityColor)evt.newValue; });
+            busColorField.RegisterValueChangedCallback(evt => _brushColorSelection = (EntityColor)evt.newValue);
             _busLineContainer.Add(busColorField);
 
-            for (var i = 0; i < count; i++)
+            for (int i = 0; i < busSequence.Count; i++)
             {
-                var index = i;
-                var reverseOrder = count - index;
-                _busSequenceList.Add(new BusLineSaveData()
-                {
-                    order = reverseOrder,
-                    color = EntityColor.Default,
-                });
+                int index = i;
+                var data = busSequence[index];
+                _busSequenceList.Add(data);
 
-                Button busBtn = new Button(() => Debug.LogWarning($"Bus Index: {index}"))
+                var busBtn = new Button
                 {
-                    text = $"{reverseOrder}.",
+                    text = $"{data.order}.",
                     style =
                     {
                         width = 35, height = 35, marginRight = 2, backgroundColor = new Color(0.15f, 0.15f, 0.15f)
                     }
                 };
+                UpdateBusButtonVisuals(busBtn, data.color);
+
                 busBtn.clicked += () =>
                 {
-                    var data = _busSequenceList[index];
-                    data.color = _bushColorSelection;
-                    _busSequenceList[index] = data;
-
-                    UpdateBusButtonVisuals(busBtn, _bushColorSelection);
+                    var entry = _busSequenceList[index];
+                    entry.color = _brushColorSelection;
+                    _busSequenceList[index] = entry;
+                    UpdateBusButtonVisuals(busBtn, _brushColorSelection);
                 };
 
                 _busLineContainer.Add(busBtn);
             }
         }
-
-        private void RefreshBusLineUI(List<BusLineSaveData> loadedBusSequence)
-        {
-            int count = loadedBusSequence.Count;
-            _busLineContainer.Clear();
-            _busSequenceList.Clear();
-            _busLineContainer.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-            var busLineLabel = new Label("Bus Line ➔")
-            {
-                style =
-                {
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    marginLeft = 10,
-                    color = new Color(0.8f, 0.8f, 0.8f),
-                }
-            };
-            _busLineContainer.Add(busLineLabel);
-
-            var busColorField = new EnumField(_bushColorSelection)
-            {
-                style = { width = 60, marginRight = 10 }
-            };
-            EnumFieldLabelAdjust(busColorField);
-
-            busColorField.RegisterValueChangedCallback(evt => { _bushColorSelection = (EntityColor)evt.newValue; });
-            _busLineContainer.Add(busColorField);
-
-            for (var i = 0; i < count; i++)
-            {
-                var index = i;
-                var loadedData = loadedBusSequence[index];
-                _busSequenceList.Add(new BusLineSaveData()
-                {
-                    order = loadedData.order,
-                    color = EntityColor.Default,
-                });
-
-                Button busBtn = new Button(() => Debug.LogWarning($"Bus Index: {index}"))
-                {
-                    text = $"{loadedData.order}.",
-                    style =
-                    {
-                        width = 35, height = 35, marginRight = 2, backgroundColor = new Color(0.15f, 0.15f, 0.15f)
-                    }
-                };
-
-                UpdateBusButtonVisuals(busBtn, loadedData.color);
-                busBtn.clicked += () =>
-                {
-                    var data = _busSequenceList[index];
-                    data.color = _bushColorSelection;
-                    _busSequenceList[index] = data;
-
-                    UpdateBusButtonVisuals(busBtn, _bushColorSelection);
-                };
-
-                _busLineContainer.Add(busBtn);
-            }
-        }
-
-        private void UpdateBusButtonVisuals(Button btn, EntityColor color)
-        {
-            Color defaultBgColor = new Color(0.15f, 0.15f, 0.15f);
-
-            ApplyColorToElement(btn, color, defaultBgColor);
-        }
-
-        private void ApplyColorToElement(VisualElement element, EntityColor color, Color defaultBgColor)
-        {
-            if (ColorLookup.TryGetValue(color, out var colors))
-            {
-                element.style.backgroundColor = colors.bg;
-                element.style.color = colors.Text;
-            }
-            else
-            {
-                element.style.backgroundColor = defaultBgColor;
-                element.style.color = Color.white;
-            }
-        }
-
 
         private void SetPassengerLine(int value)
         {
@@ -439,7 +255,6 @@ namespace _Scripts.Editor
             _passengerLineField.value = value;
         }
 
-
         private void RefreshGridUI(int widthX, int widthY)
         {
             _gridContainer.Clear();
@@ -448,118 +263,158 @@ namespace _Scripts.Editor
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
                 for (int x = 0; x < widthX; x++)
                 {
-                    int posX = x;
-                    int posY = y;
-
-                    Label cellBtnLabel = new Label
+                    int posX = x, posY = y;
+                    var cellLabel = new Label
                     {
                         style =
                         {
-                            width = 40,
-                            height = 40,
-                            marginRight = 2,
-                            marginBottom = 2,
-                            fontSize = 9,
+                            width = 40, height = 40, marginRight = 2, marginBottom = 2, fontSize = 9,
                             unityTextAlign = TextAnchor.MiddleCenter
                         }
                     };
 
-                    cellBtnLabel.RegisterCallback<PointerDownEvent>(evt =>
+                    cellLabel.RegisterCallback<PointerDownEvent>(evt =>
                     {
-                        if (evt.button == 0)
-                        {
-                            _isPainting = true;
-                            OnCellClicked(posX, posY, cellBtnLabel);
-
-                            // UI Toolkit'te butonlar tıklandığında fareyi kilitler (Capture).
-                            // Sürükleme yapabilmek için bu kilidi serbest bırakmamız gerekir.
-                            cellBtnLabel.ReleasePointer(evt.pointerId);
-                        }
-                    });
-                    cellBtnLabel.RegisterCallback<PointerEnterEvent>(evt =>
-                    {
-                        if (_isPainting)
-                        {
-                            OnCellClicked(posX, posY, cellBtnLabel);
-                        }
+                        if (evt.button != 0) return;
+                        _isPainting = true;
+                        OnCellClicked(posX, posY, cellLabel);
+                        cellLabel.ReleasePointer(evt.pointerId);
                     });
 
-                    UpdateButtonVisuals(cellBtnLabel, _cellDataMatrix[posX, posY]);
+                    cellLabel.RegisterCallback<PointerEnterEvent>(_ =>
+                    {
+                        if (_isPainting) OnCellClicked(posX, posY, cellLabel);
+                    });
 
-                    row.Add(cellBtnLabel);
+                    UpdateCellVisuals(cellLabel, _cellDataMatrix[posX, posY]);
+                    row.Add(cellLabel);
                 }
 
                 _gridContainer.Add(row);
             }
         }
 
-
-        private void OnCellClicked(int posX, int posY, Label clickedBtn)
+        private void OnCellClicked(int posX, int posY, Label label)
         {
-            CellType calculatedCellType =
-                (_brushOccupant == OccupantType.ObstacleProp || _brushOccupant == OccupantType.Passenger)
-                    ? CellType.Obstructed
-                    : CellType.Walkable;
+            CellType cellType = _brushOccupant is OccupantType.ObstacleProp or OccupantType.Passenger
+                ? CellType.Obstructed
+                : CellType.Walkable;
 
-            EntityColor finalColor = (_brushOccupant == OccupantType.Passenger) ? _brushColor : EntityColor.Default;
-
-            _cellDataMatrix[posX, posY].type = calculatedCellType;
+            _cellDataMatrix[posX, posY].type = cellType;
             _cellDataMatrix[posX, posY].occupant = _brushOccupant;
-            _cellDataMatrix[posX, posY].color = finalColor;
+            _cellDataMatrix[posX, posY].color =
+                _brushOccupant == OccupantType.Passenger ? _brushColor : EntityColor.Default;
 
-            UpdateButtonVisuals(clickedBtn, _cellDataMatrix[posX, posY]);
+            UpdateCellVisuals(label, _cellDataMatrix[posX, posY]);
         }
 
-        private void UpdateButtonVisuals(Label label, CellSaveData data)
+        private void UpdateCellVisuals(Label label, CellSaveData data)
         {
             label.text = $"{data.coordinates.x},{data.coordinates.y}";
-            Color defaultBgColor = new Color(0.3f, 0.3f, 0.3f);
+            Color defaultBg = new Color(0.3f, 0.3f, 0.3f);
 
-            if (data.occupant == OccupantType.ObstacleProp)
+            switch (data.occupant)
             {
-                label.text = "OBS";
-                defaultBgColor = Color.black;
-                label.style.color = Color.white;
-                ApplyColorToElement(label, data.color, defaultBgColor);
+                case OccupantType.ObstacleProp:
+                    label.text = "OBS";
+                    ApplyColorToElement(label, data.color, Color.black);
+                    break;
+                case OccupantType.Passenger:
+                    label.text = "PSG";
+                    ApplyColorToElement(label, data.color, defaultBg);
+                    break;
+                default:
+                    label.style.backgroundColor = defaultBg;
+                    label.style.color = Color.white;
+                    break;
             }
-            else if (data.occupant == OccupantType.Passenger)
-            {
-                label.text = "PSG";
-                ApplyColorToElement(label, data.color, defaultBgColor);
-            }
+        }
 
+        private void UpdateBusButtonVisuals(Button btn, EntityColor color) =>
+            ApplyColorToElement(btn, color, new Color(0.15f, 0.15f, 0.15f));
+
+        private void ApplyColorToElement(VisualElement element, EntityColor color, Color fallbackBg)
+        {
+            if (ColorLookup.TryGetValue(color, out var colors))
+            {
+                element.style.backgroundColor = colors.bg;
+                element.style.color = colors.text;
+            }
             else
             {
-                label.style.backgroundColor = defaultBgColor;
-                label.style.color = Color.white;
+                element.style.backgroundColor = fallbackBg;
+                element.style.color = Color.white;
             }
         }
 
         #endregion
 
+        #region UI Factory
 
-        #region UI Factory Methods
-
-        private VisualElement CreateHorizontalContainer(float marginTop, Color? bgColor = null,
-            Justify justifyAlignParam = Justify.Center)
+        private VisualElement CreateEditExistingLevelSection()
         {
-            var container = new VisualElement
-            {
-                style =
-                {
-                    marginTop = marginTop,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    justifyContent = justifyAlignParam,
-                    paddingLeft = 10
-                }
-            };
+            var container = CreateSectionContainer("Enter Existing Level ID");
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
 
-            if (bgColor.HasValue)
+            _existingLevelField = CreateCustomIntField(GetLevelNumberText, DefaultIntValue, 0.5f);
+            SetFieldToVertical(_existingLevelField);
+
+            row.Add(_existingLevelField);
+            row.Add(CreateGenerateButton(GetLevelBtnText, () => GetDesiredLevel(_existingLevelField.value)));
+            row.Add(CreateGenerateButton(DeleteSelectedLevelBtnText,
+                () => DeleteDesiredLevel(_existingLevelField.value), "#FFFFFF", DeleteBtnBackgroundColorHex));
+            container.Add(row);
+            return container;
+        }
+
+        private VisualElement CreatePaletteSection()
+        {
+            var container = CreateSectionContainer("Brush Palette");
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
+
+            var occupantField = new EnumField("Occupant", _brushOccupant) { style = { flexGrow = 1, marginRight = 5 } };
+            var colorField = new EnumField("Color", _brushColor) { style = { flexGrow = 1 } };
+            EnumFieldLabelAdjust(occupantField);
+            EnumFieldLabelAdjust(colorField);
+
+            occupantField.RegisterValueChangedCallback(evt =>
             {
-                container.style.backgroundColor = bgColor.Value;
+                _brushOccupant = (OccupantType)evt.newValue;
+                bool needsColor = _brushOccupant == OccupantType.Passenger;
+                colorField.SetEnabled(needsColor);
+                if (!needsColor)
+                {
+                    _brushColor = EntityColor.Default;
+                    colorField.value = _brushColor;
+                }
+            });
+            colorField.RegisterValueChangedCallback(evt => _brushColor = (EntityColor)evt.newValue);
+            colorField.SetEnabled(_brushOccupant == OccupantType.Passenger);
+
+            row.Add(occupantField);
+            row.Add(colorField);
+            container.Add(row);
+            return container;
+        }
+
+        private VisualElement CreateLevelSettingsSection()
+        {
+            var container = CreateSectionContainer("Level Info");
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
+
+            _xField = CreateCustomIntField("Row\n(x)", DefaultIntValue, 1);
+            _yField = CreateCustomIntField("Column\n(y)", DefaultIntValue, 1);
+            _busLineField = CreateCustomIntField("Bus\nLine Count", DefaultIntValue, 1);
+            _passengerLineField = CreateCustomIntField("Passenger\nLine Count", DefaultIntValue, 1);
+            _timerLineField = CreateCustomIntField("Timer\n(seconds)", DefaultTimerValue, 1);
+
+            foreach (var field in new[] { _xField, _yField, _busLineField, _passengerLineField, _timerLineField })
+            {
+                SetFieldToVertical(field);
+                row.Add(field);
             }
 
+            container.Add(row);
             return container;
         }
 
@@ -574,107 +429,81 @@ namespace _Scripts.Editor
                 }
             };
 
-            Button levelGridBtn = CreateGenerateButton(GridBtnText, () => GenerateGrid(_xField.value, _yField.value));
-            levelGridBtn.style.marginRight = 5;
+            var gridBtn = CreateGenerateButton(GridBtnText, () => GenerateGrid(_xField.value, _yField.value));
+            gridBtn.style.marginRight = 5;
 
-            Button busLineBtn =
-                CreateGenerateButton(BusLineBtnText, () => RefreshBusLineUI(_busLineField.value));
-
-            Button passengerLineCountBtn = CreateGenerateButton(PassengerLineBtnText,
-                () => SetPassengerLine(_passengerLineField.value));
-            row.Add(levelGridBtn);
-            row.Add(busLineBtn);
-            row.Add(passengerLineCountBtn);
+            row.Add(gridBtn);
+            row.Add(CreateGenerateButton(BusLineBtnText, () => RefreshBusLineUI(_busLineField.value)));
+            row.Add(CreateGenerateButton(PassengerLineBtnText, () => SetPassengerLine(_passengerLineField.value)));
             return row;
         }
 
-        private Button CreateGenerateButton(string buttonName, System.Action onClick = null,
-            string btnTextColor = GridBtnTextColorHex,
-            string btnBgColor = GridBtnBackgroundColorHex)
+        private VisualElement CreateFooterSection()
         {
-            var btn = new Button(onClick ?? (() => { }))
+            var container = new VisualElement
             {
-                text = buttonName,
-                style =
-                {
-                    height = 35, marginTop = 15, fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1
-                }
+                style = { marginTop = 10, marginBottom = 10, paddingLeft = 5, paddingRight = 5 }
             };
-            if (ColorUtility.TryParseHtmlString(btnBgColor, out Color bg))
-                btn.style.backgroundColor = bg;
-            if (ColorUtility.TryParseHtmlString(btnTextColor, out Color txt)) btn.style.color = txt;
 
-            return btn;
+            var saveBtn = CreateGenerateButton("Save Level", () => LevelSaveUtility.SaveLevel(
+                    _cellDataMatrix, _busSequenceList, _passengerLineField.value,
+                    SoDataPath, _isEditMode, _currentLevelId,
+                    _timerLineField.value <= 0 ? 45 : _timerLineField.value),
+                "#FFFFFF", SaveBtnBackgroundColorHex);
+
+            saveBtn.style.height = 40;
+            container.Add(saveBtn);
+            return container;
         }
-
 
         private VisualElement CreatePathSection()
         {
             var container = CreateSectionContainer("Data Paths");
-
             container.Add(new ObjectField("LevelData(SO) Path:")
             {
                 objectType = typeof(DefaultAsset),
                 value = AssetDatabase.LoadAssetAtPath<DefaultAsset>(SoDataPath)
             });
             container.SetEnabled(false);
-
-            // container.Add(new ObjectField("JSON Path")
-            // {
-            //     objectType = typeof(DefaultAsset),
-            //     value = AssetDatabase.LoadAssetAtPath<DefaultAsset>(JsonDataPath)
-            // });
-
-
             return container;
         }
 
-
-        private VisualElement CreateLevelSettingsSection()
+        private VisualElement CreateHorizontalContainer(float marginTop, Color? bgColor = null,
+            Justify justify = Justify.Center)
         {
-            var container = CreateSectionContainer("Level Info");
-
-            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
-            _xField = CreateCustomIntField("Row\n(x)", DefaultIntValue, 1);
-            _yField = CreateCustomIntField("Column\n(y)", DefaultIntValue, 1);
-            _busLineField = CreateCustomIntField("Bus\nLine Count", DefaultIntValue, 1);
-            _passengerLineField = CreateCustomIntField("Passenger\nLine Count", DefaultIntValue, 1);
-            _timerLineField = CreateCustomIntField("Timer\n(seconds)", DefaultTimerValue, 1);
-
-            SetFieldToVertical(_xField);
-            SetFieldToVertical(_yField);
-            SetFieldToVertical(_busLineField);
-            SetFieldToVertical(_passengerLineField);
-            SetFieldToVertical(_timerLineField);
-
-            row.Add(_xField);
-            row.Add(_yField);
-            row.Add(_busLineField);
-            row.Add(_passengerLineField);
-            row.Add(_timerLineField);
-            container.Add(row);
-
+            var container = new VisualElement
+            {
+                style =
+                {
+                    marginTop = marginTop, flexDirection = FlexDirection.Row, alignItems = Align.Center,
+                    justifyContent = justify, paddingLeft = 10
+                }
+            };
+            if (bgColor.HasValue) container.style.backgroundColor = bgColor.Value;
             return container;
         }
 
-        private void SetFieldToVertical(VisualElement field)
+        private Button CreateGenerateButton(string label, System.Action onClick = null,
+            string textColor = GridBtnTextColorHex, string bgColor = GridBtnBackgroundColorHex)
         {
-            field.style.flexDirection = FlexDirection.Column;
-            var label = field.Q<Label>();
-            if (label != null)
+            var btn = new Button(onClick ?? (() => { }))
             {
-                label.style.width = StyleKeyword.Auto;
-                label.style.unityTextAlign = TextAnchor.MiddleCenter;
-                label.style.minWidth = 0;
-            }
+                text = label,
+                style =
+                {
+                    height = 35, marginTop = 15, fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1
+                }
+            };
+            if (ColorUtility.TryParseHtmlString(bgColor, out var bg)) btn.style.backgroundColor = bg;
+            if (ColorUtility.TryParseHtmlString(textColor, out var txt)) btn.style.color = txt;
+            return btn;
         }
 
-
-        private static IntegerField CreateCustomIntField(string labelParam, int val, float grow)
+        private static IntegerField CreateCustomIntField(string label, int value, float grow)
         {
-            var field = new IntegerField(labelParam)
+            var field = new IntegerField(label)
             {
-                value = val,
+                value = value,
                 style =
                 {
                     flexGrow = grow, marginRight = 10, flexBasis = 0, flexDirection = FlexDirection.Row,
@@ -685,62 +514,53 @@ namespace _Scripts.Editor
             field.labelElement.style.minWidth = 20;
             field.labelElement.style.flexGrow = 0;
             field.labelElement.style.marginRight = 2;
-            var inputElement = field.Q("unity-base-field__input");
-            if (inputElement == null) return field;
-            inputElement.style.width = 30;
-            inputElement.style.flexGrow = 0;
-            inputElement.style.marginRight = 2;
+
+            var input = field.Q("unity-base-field__input");
+            if (input != null)
+            {
+                input.style.width = 30;
+                input.style.flexGrow = 0;
+                input.style.marginRight = 2;
+            }
 
             return field;
         }
 
-        private static VisualElement CreateHeaderSection(string titleParam)
+        private static VisualElement CreateHeaderSection(string title)
         {
-            var label = new Label(titleParam)
+            var label = new Label(title)
             {
-                style =
-                {
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    fontSize = 20,
-                    marginTop = 10,
-                    marginBottom = 10
-                }
+                style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 20, marginTop = 10, marginBottom = 10 }
             };
-            if (ColorUtility.TryParseHtmlString(TitleColorHex, out var c))
-                label.style.color = c;
-
+            if (ColorUtility.TryParseHtmlString(TitleColorHex, out var c)) label.style.color = c;
             return label;
         }
 
-
-        private static VisualElement CreateSectionContainer(string titleParam)
+        private static VisualElement CreateSectionContainer(string title)
         {
             var section = new VisualElement { style = { marginBottom = 10, paddingLeft = 5 } };
-            section.Add(
-                new Label(titleParam)
-                    { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5, marginTop = 5 } });
+            section.Add(new Label(title)
+                { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5, marginTop = 5 } });
             return section;
         }
 
-
-        private VisualElement CreateFooterSection()
+        private void EnumFieldLabelAdjust(EnumField field)
         {
-            var container = new VisualElement
-            {
-                style = { marginTop = 10, marginBottom = 10, paddingLeft = 5, paddingRight = 5 }
-            };
-            Button saveBtn = CreateGenerateButton("Save Level", () => LevelSaveUtility.SaveLevel(
-                    _cellDataMatrix,
-                    _busSequenceList,
-                    _passengerLineField.value,
-                    SoDataPath,
-                    _isEditMode,
-                    _currentLevelId, _timerLineField.value <= 0 ? 45 : _timerLineField.value), "#FFFFFF",
-                SaveBtnBackgroundColorHex);
-            saveBtn.style.height = 40;
-            container.Add(saveBtn);
+            var label = field.labelElement;
+            if (label == null) return;
+            label.style.minWidth = 0;
+            label.style.width = StyleKeyword.Auto;
+            label.style.marginRight = 5;
+        }
 
-            return container;
+        private void SetFieldToVertical(VisualElement field)
+        {
+            field.style.flexDirection = FlexDirection.Column;
+            var label = field.Q<Label>();
+            if (label == null) return;
+            label.style.width = StyleKeyword.Auto;
+            label.style.unityTextAlign = TextAnchor.MiddleCenter;
+            label.style.minWidth = 0;
         }
 
         #endregion

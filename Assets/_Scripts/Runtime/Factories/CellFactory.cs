@@ -19,53 +19,37 @@ namespace _Scripts.Runtime.Factories
             _walkableEmptyPrefab = walkable;
             _obstructedPrefab = obstructed;
             _passengerPrefab = passenger;
-            _colorMap = new Dictionary<EntityColor, Material>();
-            foreach (var data in colorData)
-            {
-                if (!_colorMap.ContainsKey(data.ColorType))
-                    _colorMap.Add(data.ColorType, data.Material);
-            }
+            _colorMap = ColorMapBuilder.Build(colorData);
         }
 
         public GameObject CreateCell(CellSaveData cellData, Transform parent, Vector3 position)
         {
-            GameObject prefabToSpawn = DeterminePrefab(cellData);
-
-            GameObject spawnedCell = Object.Instantiate(prefabToSpawn, position, Quaternion.identity, parent);
+            var spawnedCell = Object.Instantiate(DeterminePrefab(cellData), position, Quaternion.identity, parent);
 
             if (cellData.occupant == OccupantType.Passenger)
-            {
-                Vector2Int passengerGridPos = new Vector2Int(cellData.coordinates.x, cellData.coordinates.y);
-                ConfigureCell(spawnedCell, cellData.color, passengerGridPos);
-            }
+                ConfigurePassenger(spawnedCell, cellData);
 
             return spawnedCell;
         }
 
         private GameObject DeterminePrefab(CellSaveData cellData)
         {
-            if (cellData.occupant == OccupantType.Passenger)
-                return _passengerPrefab;
-            if (cellData.type == CellType.Obstructed)
-                return _obstructedPrefab;
-
+            if (cellData.occupant == OccupantType.Passenger) return _passengerPrefab;
+            if (cellData.type == CellType.Obstructed) return _obstructedPrefab;
             return _walkableEmptyPrefab;
         }
 
-
-        private void ConfigureCell(GameObject spawnedEntity, EntityColor colorEnum, Vector2Int position)
+        private void ConfigurePassenger(GameObject entity, CellSaveData cellData)
         {
-            if (_colorMap.TryGetValue(colorEnum, out var material))
+            if (!_colorMap.TryGetValue(cellData.color, out var material))
             {
-                if (spawnedEntity.TryGetComponent(out PassengerController controller))
-                {
-                    controller.Initialize(material, colorEnum, position);
-                }
+                Debug.LogWarning($"Material not found for color: {cellData.color}");
+                return;
             }
-            else
-            {
-                Debug.LogWarning("cannotfoundmat");
-            }
+
+            if (entity.TryGetComponent(out PassengerController controller))
+                controller.Initialize(material, cellData.color,
+                    new Vector2Int(cellData.coordinates.x, cellData.coordinates.y));
         }
     }
 }

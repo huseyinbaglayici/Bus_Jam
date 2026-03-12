@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using _Scripts.Runtime.Enums;
 using UnityEngine;
 
@@ -17,33 +16,26 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
     {
         public EntityColor Color;
         public Vector2Int GridPosition;
-
         public bool IsMoveable;
         public bool IsTapped;
-        public Queue<Vector3> PathPoints { get; set; }
-
-        public PassengerTargetType CurrentTarget = PassengerTargetType.None;
+        public PassengerTargetType CurrentTarget;
         public Vector3 TargetWorldPosition;
+        public Queue<Vector3> PathPoints { get; private set; }
 
         public PassengerEntity(EntityColor color, Vector2Int startPos)
         {
-            GridPosition = startPos;
             Color = color;
-            IsMoveable = false;
-            IsTapped = false;
+            GridPosition = startPos;
             PathPoints = new Queue<Vector3>();
-            CurrentTarget = PassengerTargetType.None;
         }
 
         public void SetPath(List<Vector3> newPath)
         {
             PathPoints.Clear();
-            foreach (var targetPoint in newPath)
-            {
-                PathPoints.Enqueue(targetPoint);
-            }
+            foreach (var point in newPath)
+                PathPoints.Enqueue(point);
         }
 
-        public bool HasPath() => PathPoints != null && PathPoints.Count > 0;
+        public bool HasPath() => PathPoints.Count > 0;
     }
 }

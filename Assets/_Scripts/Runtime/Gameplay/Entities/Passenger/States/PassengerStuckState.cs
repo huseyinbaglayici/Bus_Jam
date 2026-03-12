@@ -9,25 +9,16 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger.States
         private float _stuckTimer;
         private const float StuckDuration = 0.5f;
 
-        public PassengerStuckState(PassengerEntity entity)
-        {
-            _entity = entity;
-        }
+        public PassengerStuckState(PassengerEntity entity) => _entity = entity;
 
         public void OnEnter()
         {
             _entity.IsTapped = false;
             _stuckTimer = 0f;
-            Debug.LogWarning("HRRR");
         }
 
-        public void Update()
-        {
-            _stuckTimer += Time.deltaTime;
-        }
+        public void Update() => _stuckTimer += Time.deltaTime;
 
-        public void OnExit()
-        {
-        }
+        public void OnExit() { }
     }
 }

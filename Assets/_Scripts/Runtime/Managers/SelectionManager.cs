@@ -8,34 +8,18 @@ namespace _Scripts.Runtime.Managers
 {
     public class SelectionManager : MonoBehaviour
     {
-        private void OnEnable()
-        {
-            InputSignals.Instance.OnInputTaken += HandleInput;
-        }
+        private void OnEnable() => InputSignals.Instance.OnInputTaken += HandleInput;
 
         private void HandleInput(Vector3 worldPoint)
         {
             Vector2Int gridPos = BusJamMathUtil.WorldToGridPosition(worldPoint, ConstantUtil.SpaceModifier);
 
-            var capturedNode = GridSignals.Instance.FireOnGetNode(gridPos.x, gridPos.y);
-            if (capturedNode == null) return;
-            if (!IsNodeSelectable(capturedNode)) return;
-            DispatchSelectedNode(new Vector2Int(capturedNode.X, capturedNode.Y));
+            GridNode node = GridSignals.Instance.FireOnGetNode(gridPos.x, gridPos.y);
+            if (node == null || node.Occupant != OccupantType.Passenger) return;
+
+            GridSignals.Instance.FireOnPassengerSelected(node.X, node.Y);
         }
 
-        private bool IsNodeSelectable(GridNode capturedNode)
-        {
-            return capturedNode.Occupant == OccupantType.Passenger;
-        }
-
-        private void DispatchSelectedNode(Vector2Int entityPos)
-        {
-            GridSignals.Instance.FireOnPassengerSelected(entityPos.x, entityPos.y);
-        }
-
-        private void OnDisable()
-        {
-            InputSignals.Instance.OnInputTaken -= HandleInput;
-        }
+        private void OnDisable() => InputSignals.Instance.OnInputTaken -= HandleInput;
     }
 }

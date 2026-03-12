@@ -12,103 +12,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5cc0bcbcd5e4b758b8f5164b9c9fbdf, type: 3}
   m_Name: Level_2
   m_EditorClassIdentifier: 
-  Rows: 7
+  Rows: 2
   Cols: 3
   PassengerLineCapacity: 5
   Time: 45
   BusSequence:
-  - order: 5
-    color: 2
-  - order: 4
-    color: 2
-  - order: 3
-    color: 2
   - order: 2
     color: 2
   - order: 1
-    color: 2
+    color: 4
   GridCells:
   - coordinates: {x: 0, y: 0}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 0, y: 1}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 0, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 1, y: 0}
     type: 1
     color: 2
+    occupant: 1
+  - coordinates: {x: 0, y: 1}
+    type: 1
+    color: 2
+    occupant: 1
+  - coordinates: {x: 0, y: 2}
+    type: 1
+    color: 2
+    occupant: 1
+  - coordinates: {x: 1, y: 0}
+    type: 1
+    color: 4
     occupant: 1
   - coordinates: {x: 1, y: 1}
     type: 1
-    color: 2
+    color: 4
     occupant: 1
   - coordinates: {x: 1, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 2, y: 0}
     type: 1
-    color: 2
+    color: 4
     occupant: 1
-  - coordinates: {x: 2, y: 1}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 2, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 3, y: 0}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 3, y: 1}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 3, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 4, y: 0}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 4, y: 1}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 4, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 5, y: 0}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 5, y: 1}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 5, y: 2}
-    type: 0
-    color: 0
-    occupant: 0
-  - coordinates: {x: 6, y: 0}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 6, y: 1}
-    type: 1
-    color: 2
-    occupant: 1
-  - coordinates: {x: 6, y: 2}
-    type: 0
-    color: 0
-    occupant: 0

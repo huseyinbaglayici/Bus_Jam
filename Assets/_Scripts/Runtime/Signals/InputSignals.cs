@@ -1,22 +1,15 @@
 ﻿using System;
+using UnityEngine;
 using _Scripts.Runtime.Extensions;
-using _Scripts.Runtime.Signals.Interfaces;
 
 namespace _Scripts.Runtime.Signals
 {
-    public class InputSignals : MonoSingleton<InputSignals>, IInputSignals
+    public class InputSignals : MonoSingleton<InputSignals>
     {
         public event Action OnFirstTouchTaken = delegate { };
-        public event Action<UnityEngine.Vector3> OnInputTaken = delegate { };
+        public event Action<Vector3> OnInputTaken = delegate { };
 
-        public void FireOnFirstTouchTaken()
-        {
-            OnFirstTouchTaken.Invoke();
-        }
-
-        public void FireOnInputTaken(UnityEngine.Vector3 point)
-        {
-            OnInputTaken.Invoke(point);
-        }
+        public void FireOnFirstTouchTaken() => OnFirstTouchTaken.Invoke();
+        public void FireOnInputTaken(Vector3 point) => OnInputTaken.Invoke(point);
     }
 }

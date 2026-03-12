@@ -2,6 +2,7 @@
 using _Scripts.Runtime.Commands;
 using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Signals;
+using _Scripts.Runtime.Utils;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,44 +11,24 @@ namespace _Scripts.Runtime.Managers
 {
     public class LevelManager : MonoBehaviour
     {
-        private const string GAMEPLAY_SCENE_NAME = "GameplayScene";
-
-
-        private bool _isLoading = false;
-
         public LevelDataSO currentLevelData;
+
         private LevelLoaderCommand _levelLoaderCommand;
-
         private int _currentLevel;
+        private bool _isLoading;
 
-        private void Awake()
-        {
-            Init();
-        }
+        private void Awake() => _levelLoaderCommand = new LevelLoaderCommand(this);
 
         private void OnEnable()
         {
             SubscribeEvents();
-
             _currentLevel = SaveSignals.Instance.FireGetLevelId();
             currentLevelData = SaveSignals.Instance.FireOnGetLevelData();
         }
 
-        private int OnSendTimerData()
-        {
-            return currentLevelData.Time;
-        }
+        private int OnSendTimerData() => currentLevelData.Time;
 
-
-        private void Init()
-        {
-            _levelLoaderCommand = new LevelLoaderCommand(this);
-        }
-
-        private void Start()
-        {
-            CoreGameSignals.Instance.FireOnLevelInitialize(_currentLevel);
-        }
+        private void Start() => CoreGameSignals.Instance.FireOnLevelInitialize(_currentLevel);
 
         #region Event Subscriptions
 
@@ -59,7 +40,6 @@ namespace _Scripts.Runtime.Managers
             ActiveLevelSignals.Instance.OnGetLevelTime += OnSendTimerData;
         }
 
-
         private void UnsubscribeEvents()
         {
             CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitializeWrapper;
@@ -68,40 +48,23 @@ namespace _Scripts.Runtime.Managers
             ActiveLevelSignals.Instance.OnGetLevelTime -= OnSendTimerData;
         }
 
-
-        #region Wrapper functions
-
-        /// <summary>
-        ///  i used wrapper functions because i have to sub/ubsub other action signals.
-        /// Because of the handlers returns unitaskvoid I cannot link to them with coregamesignals. so I used wrappers
-        /// </summary>
-        /// <param name="levelParam"></param>
-        private void OnLevelInitializeWrapper(int levelParam)
-        {
-            OnLevelInitializeHandler(levelParam).Forget();
-        }
-
-        private void OnNextLevelWrapper()
-        {
-            OnNextLevelHandler().Forget();
-        }
-
-        private void OnRestartLevelWrapper()
-        {
-            OnRestartLevelHandler().Forget();
-        }
+        // UniTaskVoid handler'lar Action delegate'e direkt bağlanamadığı için wrapper kullanıyoruz
+        private void OnLevelInitializeWrapper(int level) => OnLevelInitializeHandler(level).Forget();
+        private void OnNextLevelWrapper() => OnNextLevelHandler().Forget();
+        private void OnRestartLevelWrapper() => OnRestartLevelHandler().Forget();
 
         #endregion
 
-        #endregion
+        #region Level Flow
 
-        private async UniTaskVoid OnLevelInitializeHandler(int levelParam)
+        private async UniTaskVoid OnLevelInitializeHandler(int level)
         {
             if (_isLoading) return;
             _isLoading = true;
-            await LoadGameplayScene(levelParam);
+            await LoadGameplayScene(level);
             _isLoading = false;
         }
+
 
         private async UniTaskVoid OnNextLevelHandler()
         {
@@ -122,22 +85,25 @@ namespace _Scripts.Runtime.Managers
             await UnloadGameplaySceneAsync();
             CoreGameSignals.Instance.FireOnReset();
             await LoadGameplayScene(_currentLevel);
-
             CoreGameSignals.Instance.FireOnPlay();
             _isLoading = false;
         }
 
-        private async UniTask LoadGameplayScene(int levelParam)
+        #endregion
+
+        #region Scene Management
+
+        private async UniTask LoadGameplayScene(int level)
         {
             try
             {
-                await SceneManager.LoadSceneAsync(GAMEPLAY_SCENE_NAME, LoadSceneMode.Additive)
+                await SceneManager.LoadSceneAsync(ConstantUtil.GameplaySceneName, LoadSceneMode.Additive)
                     .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
 
-                Scene gameplayScene = SceneManager.GetSceneByName(GAMEPLAY_SCENE_NAME);
+                Scene gameplayScene = SceneManager.GetSceneByName(ConstantUtil.GameplaySceneName);
                 SceneManager.SetActiveScene(gameplayScene);
 
-                await _levelLoaderCommand.ExecuteAsync(levelParam);
+                await _levelLoaderCommand.ExecuteAsync(level);
             }
             catch (OperationCanceledException)
             {
@@ -150,17 +116,15 @@ namespace _Scripts.Runtime.Managers
 
         private async UniTask UnloadGameplaySceneAsync()
         {
-            Scene gameplayScene = SceneManager.GetSceneByName(GAMEPLAY_SCENE_NAME);
-            if (gameplayScene.isLoaded)
-            {
-                await SceneManager.UnloadSceneAsync(GAMEPLAY_SCENE_NAME)
-                    .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
+            Scene gameplayScene = SceneManager.GetSceneByName(ConstantUtil.GameplaySceneName);
+            if (!gameplayScene.isLoaded) return;
+
+            await SceneManager.UnloadSceneAsync(ConstantUtil.GameplaySceneName)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
-        private void OnDisable()
-        {
-            UnsubscribeEvents();
-        }
+        #endregion
+
+        private void OnDisable() => UnsubscribeEvents();
     }
 }

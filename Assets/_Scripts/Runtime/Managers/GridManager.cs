@@ -22,9 +22,8 @@ namespace _Scripts.Runtime.Managers
 
         private Transform _gridHolder;
         private CellFactory _cellFactory;
-
-        private Vector2Int GridSize { get; set; }
-        private GridSystem LogicGrid { get; set; }
+        private GridSystem _logicGrid;
+        private Vector2Int _gridSize;
 
         private void Awake()
         {
@@ -40,36 +39,21 @@ namespace _Scripts.Runtime.Managers
             GridSignals.Instance.OnCalculatePathToExit += HandleCalculatePathToExit;
         }
 
-        private void OnDisable()
-        {
-            CoreGameSignals.Instance.OnLevelDataLoaded -= GenerateLevel;
-            ActiveLevelSignals.Instance.OnGetCenterOfActiveGrid -= OnSendCenterOfActiveGrid;
-            GridSignals.Instance.OnGetNode -= GetNodeFromGrid;
-            GridSignals.Instance.OnFreeNode -= HandleFreeNode;
-            GridSignals.Instance.OnCalculatePathToExit -= HandleCalculatePathToExit;
-        }
+        #region Initialization
 
         private void GenerateLevel(LevelDataSO levelData)
         {
             CreateHolder();
-            LogicGrid = new GridSystem(levelData);
-            GridSize = FetchGridParams(levelData);
+
+            _logicGrid = new GridSystem(levelData);
+            _gridSize = new Vector2Int(levelData.Cols, levelData.Rows);
 
             SpawnConcreteCells(levelData);
-            CoreGameSignals.Instance.FireOnGridReady(levelData, GridSize.x, GridSize.y);
-            var centerOfGrid = BusJamMathUtil.GetCenterOfGrid(GridSize.x, GridSize.y, ConstantUtil.SpaceModifier);
-            CameraSignals.Instance.FireOnSetCameraZoom(GridSize.x, GridSize.y);
+
+            var centerOfGrid = BusJamMathUtil.GetCenterOfGrid(_gridSize.x, _gridSize.y, ConstantUtil.SpaceModifier);
+            CoreGameSignals.Instance.FireOnGridReady(levelData, _gridSize.x, _gridSize.y);
+            CameraSignals.Instance.FireOnSetCameraZoom(_gridSize.x, _gridSize.y);
             CameraSignals.Instance.FireOnSetCameraPosition(centerOfGrid);
-        }
-
-        private Vector2Int FetchGridParams(LevelDataSO levelData)
-        {
-            return new Vector2Int(levelData.Cols, levelData.Rows);
-        }
-
-        private Vector3 OnSendCenterOfActiveGrid()
-        {
-            return BusJamMathUtil.GetCenterOfGrid(GridSize.x, GridSize.y, ConstantUtil.SpaceModifier);
         }
 
         private void SpawnConcreteCells(LevelDataSO levelData)
@@ -79,40 +63,41 @@ namespace _Scripts.Runtime.Managers
                 Vector2Int gridPos = new Vector2Int(cellData.coordinates.x, cellData.coordinates.y);
                 Vector3 worldPos = BusJamMathUtil.GridToWorldPosition(gridPos, ConstantUtil.SpaceModifier);
 
-                GameObject spawnedCell =
-                    _cellFactory.CreateCell(cellData, _gridHolder, worldPos);
+                GameObject spawnedCell = _cellFactory.CreateCell(cellData, _gridHolder, worldPos);
 
-                if (cellData.occupant == OccupantType.Passenger)
+                if (cellData.occupant == OccupantType.Passenger &&
+                    spawnedCell.TryGetComponent(out PassengerController passenger))
                 {
-                    if (spawnedCell.TryGetComponent(out PassengerController newPassenger))
-                    {
-                        PassengerSignals.Instance.FireOnRegisterPassenger(gridPos, newPassenger);
-                    }
+                    PassengerSignals.Instance.FireOnRegisterPassenger(gridPos, passenger);
                 }
             }
         }
 
-        private void HandleFreeNode(int x, int y)
-        {
-            if (LogicGrid == null) return;
-            LogicGrid.FreeNode(x, y);
-        }
+        private void CreateHolder() => _gridHolder = new GameObject(ConstantUtil.GridHolderName).transform;
 
-        private List<GridNode> HandleCalculatePathToExit(int x, int y)
-        {
-            if (LogicGrid == null) return null;
-            return LogicGrid.CalculatePathToExit(x, y);
-        }
+        #endregion
 
-        private GridNode GetNodeFromGrid(int x, int y)
-        {
-            if (LogicGrid != null) return LogicGrid.GetNode(x, y);
-            return null;
-        }
+        #region Signal Handlers
 
-        private void CreateHolder()
+        private Vector3 OnSendCenterOfActiveGrid() =>
+            BusJamMathUtil.GetCenterOfGrid(_gridSize.x, _gridSize.y, ConstantUtil.SpaceModifier);
+
+        private GridNode GetNodeFromGrid(int x, int y) => _logicGrid?.GetNode(x, y);
+
+        private void HandleFreeNode(int x, int y) => _logicGrid?.FreeNode(x, y);
+
+        private List<GridNode> HandleCalculatePathToExit(int x, int y) =>
+            _logicGrid?.CalculatePathToExit(x, y);
+
+        #endregion
+
+        private void OnDisable()
         {
-            _gridHolder = new GameObject("GridHolder").transform;
+            CoreGameSignals.Instance.OnLevelDataLoaded -= GenerateLevel;
+            ActiveLevelSignals.Instance.OnGetCenterOfActiveGrid -= OnSendCenterOfActiveGrid;
+            GridSignals.Instance.OnGetNode -= GetNodeFromGrid;
+            GridSignals.Instance.OnFreeNode -= HandleFreeNode;
+            GridSignals.Instance.OnCalculatePathToExit -= HandleCalculatePathToExit;
         }
     }
 }

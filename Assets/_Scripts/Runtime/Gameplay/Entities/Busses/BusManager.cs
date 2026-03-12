@@ -4,30 +4,31 @@ using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Factories;
 using _Scripts.Runtime.Signals;
+using _Scripts.Runtime.Utils;
 using DG.Tweening;
 using UnityEngine;
-using Vector3 = UnityEngine.Vector3;
 
 namespace _Scripts.Runtime.Gameplay.Entities.Busses
 {
     public class BusManager : MonoBehaviour
     {
         [Header("Prefab")] [SerializeField] private GameObject busPrefab;
-
         [SerializeField] private List<EntityColorData> colorDatabase;
 
         private const float StationZOffset = 5.5f;
         private const float StationXOffset = 5f;
         private const float StationYOffset = 1.10f;
+        private const float BusDepartDuration = 0.8f;
+        private const float BusArriveDuration = 0.6f;
+        private const float NextBusDelay = 0.65f;
 
+        private readonly Vector3 _pivotCorrectionOffset = new Vector3(1.2f, 0, 0);
 
         private Transform _busHolder;
         private BusFactory _busFactory;
-        private Queue<BusController> _busQueue = new Queue<BusController>();
         private BusController _activeBus;
-        private readonly Vector3 _pivotCorrectionOffset = new Vector3(1.2f, 0, 0);
-        private const float XMultiplier = 1.3f;
-        private Vector3 _activeBusPosition;
+        private readonly Queue<BusController> _busQueue = new Queue<BusController>();
+        private Vector3 _stationPosition;
         private Vector3 _queueSpacing;
 
         private void Awake()
@@ -36,60 +37,69 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             _queueSpacing = new Vector3(-StationXOffset, 0, 0);
         }
 
-        private void OnEnable()
-        {
-            SubscribeEvents();
-        }
+        private void OnEnable() => SubscribeEvents();
 
         private void SubscribeEvents()
         {
-            CoreGameSignals.Instance.OnGridReady += GenerateBusses;
+            CoreGameSignals.Instance.OnGridReady += OnGridReady;
+            CoreGameSignals.Instance.OnPlay += HandleBusSeq;
             ActiveLevelSignals.Instance.OnGetBusCount += OnSendBusCount;
+            BusSignals.Instance.OnGetBusPosition += HandleGetBusPosition;
             BusSignals.Instance.OnGetActiveBusColor += OnGetActiveBusColor;
             BusSignals.Instance.OnHasAvailableSlot += HandleHasAvailableSlot;
-            BusSignals.Instance.OnGetSlotPosition += HandleGetSlotPosition;
             BusSignals.Instance.OnPassengerBoardedBus += HandlePassengerBoardedBus;
-            CoreGameSignals.Instance.OnPlay += HandleBusSeq;
         }
 
-        private void GenerateBusses(LevelDataSO levelData, int gridXCount, int gridZCount)
+        private void UnsubscribeEvents()
+        {
+            CoreGameSignals.Instance.OnGridReady -= OnGridReady;
+            CoreGameSignals.Instance.OnPlay -= HandleBusSeq;
+            ActiveLevelSignals.Instance.OnGetBusCount -= OnSendBusCount;
+            BusSignals.Instance.OnGetBusPosition -= HandleGetBusPosition;
+            BusSignals.Instance.OnGetActiveBusColor -= OnGetActiveBusColor;
+            BusSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
+            BusSignals.Instance.OnPassengerBoardedBus -= HandlePassengerBoardedBus;
+        }
+
+        #region Initialization
+
+        private void OnGridReady(LevelDataSO levelData, int gridXCount, int gridZCount)
         {
             CreateHolder();
-            float gridCenterX = ((gridXCount - 1) * XMultiplier) / 2f;
-            float gridTopZ = (gridZCount - 1) * 1.1f;
-            float finalBusZ = gridTopZ + StationZOffset;
-            _activeBusPosition = new Vector3(gridCenterX, StationYOffset, finalBusZ) + _pivotCorrectionOffset;
-
+            CalculateStationPosition(gridXCount, gridZCount);
+            BusSignals.Instance.FireOnStationPositionReady(_stationPosition);
             SpawnConcreteBusses(levelData);
         }
 
-
-        private void HandleBusSeq()
+        private void CalculateStationPosition(int gridXCount, int gridZCount)
         {
-            if (_busQueue.Count > 0 && _activeBus == null)
-                ActivateNextBus();
+            float gridCenterX = ((gridXCount - 1) * ConstantUtil.SpaceModifier) / 2f;
+            float gridTopZ = (gridZCount - 1) * ConstantUtil.SpaceModifier;
+            _stationPosition = new Vector3(gridCenterX, StationYOffset, gridTopZ + StationZOffset)
+                               + _pivotCorrectionOffset;
         }
 
         private void SpawnConcreteBusses(LevelDataSO levelData)
         {
-            int queueIndex = 0;
             for (int i = levelData.BusSequence.Count - 1; i >= 0; i--)
             {
+                int queueIndex = levelData.BusSequence.Count - 1 - i;
                 var busData = levelData.BusSequence[i];
-                Vector3 spawnPos = _activeBusPosition + (_queueSpacing * (queueIndex + 1));
+                Vector3 spawnPos = _stationPosition + _queueSpacing * (queueIndex + 1);
+
                 GameObject spawnedBusObj = _busFactory.CreateBus(busData, _busHolder, spawnPos);
+                if (!spawnedBusObj.TryGetComponent(out BusController busController)) continue;
 
-                if (spawnedBusObj.TryGetComponent(out BusController busController))
-                {
-                    busController.Initialize(busData.color);
-                    _busQueue.Enqueue(busController);
-                }
-
-                queueIndex++;
+                busController.Initialize(busData.color);
+                _busQueue.Enqueue(busController);
             }
         }
 
-        #region BusMovement Logic
+        private void CreateHolder() => _busHolder = new GameObject("BusHolder").transform;
+
+        #endregion
+
+        #region Bus Movement
 
         private void ActivateNextBus()
         {
@@ -100,21 +110,24 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             }
 
             _activeBus = _busQueue.Dequeue();
-            _activeBus.transform.DOMove(_activeBusPosition, 0.6f).SetEase(Ease.OutBack).OnComplete(() =>
-            {
-                BusSignals.Instance.FireOnBusArrived(_activeBus.BusColor);
-            });
+            BusSignals.Instance.FireOnBusIncoming(_activeBus.BusColor);
 
-            ShiftWaitingBussesForward();
+            _activeBus.transform
+                .DOMove(_stationPosition, BusArriveDuration)
+                .SetEase(Ease.OutBack)
+                .OnComplete(() => BusSignals.Instance.FireOnBusArrived(_activeBus.BusColor));
+
+            ShiftQueueForward();
         }
 
-        private void ShiftWaitingBussesForward()
+        private void ShiftQueueForward()
         {
             int index = 1;
             foreach (var bus in _busQueue)
             {
-                Vector3 targetWaitPos = _activeBusPosition + (_queueSpacing * index);
-                bus.transform.DOMove(targetWaitPos, 0.5f).SetEase(Ease.OutQuad);
+                bus.transform
+                    .DOMove(_stationPosition + _queueSpacing * index, 0.5f)
+                    .SetEase(Ease.OutQuad);
                 index++;
             }
         }
@@ -122,70 +135,48 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private void SendActiveBusAway()
         {
             BusController departingBus = _activeBus;
+            _activeBus = null;
 
-            departingBus.transform.DOMoveX(departingBus.transform.position.x + 20f, 0.8f)
+            departingBus.transform
+                .DOMoveX(departingBus.transform.position.x + 20f, BusDepartDuration)
                 .SetEase(Ease.InBack)
-                .OnComplete(() => { Destroy(departingBus.gameObject); });
-            DOVirtual.DelayedCall(0.65f, ActivateNextBus);
+                .OnComplete(() => Destroy(departingBus.gameObject));
+
+            DOVirtual.DelayedCall(NextBusDelay, ActivateNextBus);
         }
 
         #endregion
 
-
         #region Signal Handlers
+
+        private void HandleBusSeq()
+        {
+            if (_busQueue.Count > 0 && _activeBus == null) ActivateNextBus();
+        }
+
+        private Vector3 HandleGetBusPosition(EntityColor color) =>
+            _activeBus != null ? _activeBus.GetEntrancePosition() : Vector3.zero;
 
         private int OnSendBusCount() => _busQueue.Count + (_activeBus != null ? 1 : 0);
 
-        private EntityColor OnGetActiveBusColor()
-        {
-            return _activeBus != null ? _activeBus.BusColor : EntityColor.Default;
-        }
+        private EntityColor OnGetActiveBusColor() =>
+            _activeBus != null ? _activeBus.BusColor : EntityColor.Default;
 
-        private bool HandleHasAvailableSlot(EntityColor passengerColor)
-        {
-            if (_activeBus == null) return false;
-            return _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
-        }
-
-        private Vector3 HandleGetSlotPosition(EntityColor passengerColor)
-        {
-            if (_activeBus == null) return Vector3.zero;
-            return _activeBus.GetEntrancePosition();
-        }
+        private bool HandleHasAvailableSlot(EntityColor passengerColor) =>
+            _activeBus != null && _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
 
         private void HandlePassengerBoardedBus()
         {
             if (_activeBus == null) return;
-
-            bool isBusFull = _activeBus.OnPassengerBoarded();
-
-            if (isBusFull)
+            if (_activeBus.OnPassengerBoarded())
             {
+                BusSignals.Instance.FireOnBusLeft(_activeBus.BusColor);
                 SendActiveBusAway();
             }
         }
 
         #endregion
 
-        private void OnDisable()
-        {
-            UnsubscribeEvents();
-        }
-
-        private void UnsubscribeEvents()
-        {
-            CoreGameSignals.Instance.OnGridReady -= GenerateBusses;
-            ActiveLevelSignals.Instance.OnGetBusCount -= OnSendBusCount;
-            BusSignals.Instance.OnGetActiveBusColor -= OnGetActiveBusColor;
-            BusSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
-            BusSignals.Instance.OnGetSlotPosition -= HandleGetSlotPosition;
-            BusSignals.Instance.OnPassengerBoardedBus -= HandlePassengerBoardedBus;
-            CoreGameSignals.Instance.OnPlay -= HandleBusSeq;
-        }
-
-        private void CreateHolder()
-        {
-            _busHolder = new GameObject("BusHolder").transform;
-        }
+        private void OnDisable() => UnsubscribeEvents();
     }
 }

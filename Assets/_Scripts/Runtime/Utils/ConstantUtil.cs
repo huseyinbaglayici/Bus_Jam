@@ -4,14 +4,16 @@
     {
         #region INTEGERS
 
-        public static float SpaceModifier = 1.1f;
+        public const float SpaceModifier = 1.1f;
 
         #endregion
 
         #region STRINGS
 
-        public const string LEVEL_KEY = "CurrentLevelId";
-        public const string LEVEL_PATH = "Data/SO_Level_Data/Level_";
+        public const string LevelKey = "CurrentLevelId";
+        public const string LevelPath = "Data/SO_Level_Data/Level_";
+        public const string GridHolderName = "GridHolder";
+        public const string GameplaySceneName = "GameplayScene";
 
         #endregion
     }

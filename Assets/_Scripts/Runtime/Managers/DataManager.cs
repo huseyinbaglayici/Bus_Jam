@@ -14,22 +14,16 @@ namespace _Scripts.Runtime.Managers
             SaveSignals.Instance.OnGetLevelData += GetLevelData;
         }
 
-        private int GetLevelId()
-        {
-            return PlayerPrefs.GetInt(ConstantUtil.LEVEL_KEY, 1);
-        }
+        private int GetLevelId() => PlayerPrefs.GetInt(ConstantUtil.LevelKey, 1);
 
         private void SaveLevel(int newLevelId)
         {
-            PlayerPrefs.SetInt(ConstantUtil.LEVEL_KEY, newLevelId);
+            PlayerPrefs.SetInt(ConstantUtil.LevelKey, newLevelId);
             PlayerPrefs.Save();
         }
 
-        private LevelDataSO GetLevelData()
-        {
-            return Resources.Load<LevelDataSO>($"{ConstantUtil.LEVEL_PATH}{GetLevelId()}");
-        }
-
+        private LevelDataSO GetLevelData() =>
+            Resources.Load<LevelDataSO>($"{ConstantUtil.LevelPath}{GetLevelId()}");
 
         private void OnDisable()
         {

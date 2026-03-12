@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using _Scripts.Runtime.Signals;
+﻿using _Scripts.Runtime.Signals;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,8 +6,8 @@ namespace _Scripts.Runtime.Managers
 {
     public class InputManager : MonoBehaviour
     {
-        [SerializeField] private bool _isAvailableForTouch = true;
-        [SerializeField] private bool _isFirstTouchTaken;
+        [SerializeField] private bool isAvailableForTouch = true;
+        [SerializeField] private bool isFirstTouchTaken;
 
         private Camera _mainCamera;
         private Plane _groundPlane;
@@ -22,86 +20,56 @@ namespace _Scripts.Runtime.Managers
 
         private void OnEnable()
         {
-            SubscribeEvents();
-        }
-
-        private void SubscribeEvents()
-        {
             CoreGameSignals.Instance.OnPlay += EnableTouch;
-            CoreGameSignals.Instance.OnLevelFailed += DisableInput;
-            CoreGameSignals.Instance.OnLevelSuccessful += DisableInput;
-            CoreGameSignals.Instance.OnReset += OnReset;
-            CoreGameSignals.Instance.OnRestartLevel += OnRestartLevel;
-            InputSignals.Instance.OnFirstTouchTaken += SetFirstTouchTaken;
+            CoreGameSignals.Instance.OnLevelFailed += DisableTouch;
+            CoreGameSignals.Instance.OnLevelSuccessful += DisableTouch;
+            CoreGameSignals.Instance.OnReset += ResetInput;
+            CoreGameSignals.Instance.OnRestartLevel += ResetInput;
+            InputSignals.Instance.OnFirstTouchTaken += OnFirstTouchTaken;
         }
-
-        private void OnRestartLevel()
-        {
-            OnReset();
-        }
-
-        private void EnableTouch() => _isAvailableForTouch = true;
-        private void DisableInput() => _isAvailableForTouch = false;
-        private void SetFirstTouchTaken() => _isFirstTouchTaken = true;
-
-        private void OnReset()
-        {
-            _isAvailableForTouch = true;
-            _isFirstTouchTaken = false;
-        }
-
 
         private void Update()
         {
-            if (!_isAvailableForTouch) return;
+            if (!isAvailableForTouch) return;
+            if (!Input.GetMouseButtonDown(0)) return;
+            if (IsPointerOverUI()) return;
 
-            if (Input.GetMouseButtonDown(0))
+            if (!isFirstTouchTaken)
             {
-                if (IsPointerOverUIObject()) return;
-
-                if (!_isFirstTouchTaken)
-                {
-                    InputSignals.Instance.FireOnFirstTouchTaken();
-                    CoreGameSignals.Instance.FireOnPlay();
-                }
-
-                Vector3 hitPoint = GetWorldPositionFromMouse();
-
-                InputSignals.Instance.FireOnInputTaken(hitPoint);
+                InputSignals.Instance.FireOnFirstTouchTaken();
+                CoreGameSignals.Instance.FireOnPlay();
             }
+
+            InputSignals.Instance.FireOnInputTaken(GetWorldPositionFromMouse());
+        }
+
+        private void EnableTouch() => isAvailableForTouch = true;
+        private void DisableTouch() => isAvailableForTouch = false;
+        private void OnFirstTouchTaken() => isFirstTouchTaken = true;
+
+        private void ResetInput()
+        {
+            isAvailableForTouch = true;
+            isFirstTouchTaken = false;
         }
 
         private Vector3 GetWorldPositionFromMouse()
         {
             Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
-            if (_groundPlane.Raycast(ray, out float distance))
-            {
-                return ray.GetPoint(distance);
-            }
-
-            return Vector3.zero;
+            return _groundPlane.Raycast(ray, out float distance) ? ray.GetPoint(distance) : Vector3.zero;
         }
 
-        private bool IsPointerOverUIObject()
-        {
-            if (EventSystem.current == null) return false;
-            return EventSystem.current.IsPointerOverGameObject();
-        }
-
+        private bool IsPointerOverUI() =>
+            EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
         private void OnDisable()
         {
-            UnSubscribeEvents();
-        }
-
-        private void UnSubscribeEvents()
-        {
             CoreGameSignals.Instance.OnPlay -= EnableTouch;
-            CoreGameSignals.Instance.OnLevelFailed -= DisableInput;
-            CoreGameSignals.Instance.OnLevelSuccessful -= DisableInput;
-            CoreGameSignals.Instance.OnReset -= OnReset;
-            CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevel;
-            InputSignals.Instance.OnFirstTouchTaken -= SetFirstTouchTaken;
+            CoreGameSignals.Instance.OnLevelFailed -= DisableTouch;
+            CoreGameSignals.Instance.OnLevelSuccessful -= DisableTouch;
+            CoreGameSignals.Instance.OnReset -= ResetInput;
+            CoreGameSignals.Instance.OnRestartLevel -= ResetInput;
+            InputSignals.Instance.OnFirstTouchTaken -= OnFirstTouchTaken;
         }
     }
 }

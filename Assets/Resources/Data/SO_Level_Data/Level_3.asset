@@ -10,25 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f5cc0bcbcd5e4b758b8f5164b9c9fbdf, type: 3}
-  m_Name: Level_1
+  m_Name: Level_3
   m_EditorClassIdentifier: 
-  Rows: 3
-  Cols: 2
+  Rows: 2
+  Cols: 3
   PassengerLineCapacity: 5
   Time: 45
   BusSequence:
   - order: 2
-    color: 3
+    color: 5
   - order: 1
-    color: 2
+    color: 3
   GridCells:
   - coordinates: {x: 0, y: 0}
     type: 1
-    color: 3
+    color: 5
     occupant: 1
   - coordinates: {x: 0, y: 1}
     type: 1
-    color: 2
+    color: 3
+    occupant: 1
+  - coordinates: {x: 0, y: 2}
+    type: 1
+    color: 5
     occupant: 1
   - coordinates: {x: 1, y: 0}
     type: 1
@@ -36,13 +40,9 @@ MonoBehaviour:
     occupant: 1
   - coordinates: {x: 1, y: 1}
     type: 1
-    color: 2
+    color: 5
     occupant: 1
-  - coordinates: {x: 2, y: 0}
+  - coordinates: {x: 1, y: 2}
     type: 1
     color: 3
-    occupant: 1
-  - coordinates: {x: 2, y: 1}
-    type: 1
-    color: 2
     occupant: 1

@@ -12,75 +12,45 @@ namespace _Scripts.Runtime.Managers
     {
         private readonly Dictionary<Vector2Int, PassengerController> _passengerRegistry = new();
 
-        private void OnEnable() => SubscribeEvents();
-        private void OnDisable() => UnSubscribeEvents();
-
-        private void SubscribeEvents()
+        private void OnEnable()
         {
             PassengerSignals.Instance.OnRegisterPassenger += RegisterPassenger;
-
             GridSignals.Instance.OnPassengerSelected += OnPassengerSelected;
-        }
-
-        private void UnSubscribeEvents()
-        {
-            PassengerSignals.Instance.OnRegisterPassenger -= RegisterPassenger;
-            GridSignals.Instance.OnPassengerSelected -= OnPassengerSelected;
-        }
-
-        private void RegisterPassenger(Vector2Int gridPos, PassengerController controller)
-        {
-            _passengerRegistry[gridPos] = controller;
         }
 
         private void OnPassengerSelected(int x, int y)
         {
             Vector2Int gridPos = new Vector2Int(x, y);
+            if (!_passengerRegistry.TryGetValue(gridPos, out var controller)) return;
 
-            if (!_passengerRegistry.TryGetValue(gridPos, out var passengerController))
-            {
-                return;
-            }
-
-            PassengerEntity entity = passengerController.Entity;
-
-            if (!TryGetAvailableTarget(passengerController, out Vector3 targetFinalPos,
-                    out PassengerTargetType targetType))
-            {
-                return;
-            }
+            if (!TryGetAvailableTarget(controller, out Vector3 targetPos, out PassengerTargetType targetType)) return;
 
             List<GridNode> gridPath = GridSignals.Instance.FireOnCalculatePathToExit(x, y);
-
-            if (gridPath == null)
-            {
-                return;
-            }
+            if (gridPath == null) return;
 
             Queue<Vector3> worldPath = ConvertGridPathToWorld(gridPath);
-            worldPath.Enqueue(targetFinalPos);
+            worldPath.Enqueue(targetPos);
 
-
-            DispatchPathToPassenger(passengerController, entity, worldPath, targetType);
+            DispatchPathToPassenger(controller, worldPath, targetType);
         }
 
-        private bool TryGetAvailableTarget(PassengerController passengerController, out Vector3 targetPos,
+        private bool TryGetAvailableTarget(PassengerController controller, out Vector3 targetPos,
             out PassengerTargetType targetType)
         {
-            EntityColor passengerColor = passengerController.Entity.Color;
+            EntityColor color = controller.Entity.Color;
             targetPos = Vector3.zero;
             targetType = PassengerTargetType.None;
 
-            if (BusSignals.Instance.FireOnHasAvailableSlot(passengerColor))
+            if (BusSignals.Instance.FireOnHasAvailableSlot(color))
             {
-                targetPos = BusSignals.Instance.FireOnGetBusPosition(passengerColor);
+                targetPos = BusSignals.Instance.FireOnGetBusPosition(color);
                 targetType = PassengerTargetType.Bus;
                 return true;
             }
 
             if (LineSignals.Instance.FireOnHasAvailableSlot())
             {
-                targetPos = LineSignals.Instance.FireOnGetSlotPosition(passengerController);
+                targetPos = LineSignals.Instance.FireOnGetSlotPosition(controller);
                 targetType = PassengerTargetType.Line;
                 return true;
             }
@@ -90,25 +60,31 @@ namespace _Scripts.Runtime.Managers
 
         private Queue<Vector3> ConvertGridPathToWorld(List<GridNode> gridPath)
         {
-            Queue<Vector3> pathQueue = new Queue<Vector3>();
+            var pathQueue = new Queue<Vector3>();
             foreach (var node in gridPath)
-            {
-                Vector3 worldPos =
-                    BusJamMathUtil.GridToWorldPosition(new Vector2Int(node.X, node.Y), ConstantUtil.SpaceModifier);
-                pathQueue.Enqueue(worldPos);
-            }
-
+                pathQueue.Enqueue(BusJamMathUtil.GridToWorldPosition(
+                    new Vector2Int(node.X, node.Y), ConstantUtil.SpaceModifier));
             return pathQueue;
         }
 
-        private void DispatchPathToPassenger(PassengerController controller, PassengerEntity entity,
-            Queue<Vector3> worldPath, PassengerTargetType targetType)
+        private void DispatchPathToPassenger(PassengerController controller, Queue<Vector3> worldPath,
+            PassengerTargetType targetType)
         {
+            PassengerEntity entity = controller.Entity;
             entity.CurrentTarget = targetType;
             entity.SetPath(new List<Vector3>(worldPath));
 
             GridSignals.Instance.FireOnFreeNode(entity.GridPosition.x, entity.GridPosition.y);
             _passengerRegistry.Remove(entity.GridPosition);
+        }
+
+        private void RegisterPassenger(Vector2Int gridPos, PassengerController controller) =>
+            _passengerRegistry[gridPos] = controller;
+
+        private void OnDisable()
+        {
+            PassengerSignals.Instance.OnRegisterPassenger -= RegisterPassenger;
+            GridSignals.Instance.OnPassengerSelected -= OnPassengerSelected;
         }
     }
 }

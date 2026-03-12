@@ -11,41 +11,29 @@ namespace _Scripts.Runtime.Factories
         private readonly GameObject _busPrefab;
         private readonly Dictionary<EntityColor, Material> _colorMap;
 
-
         public BusFactory(GameObject busPrefab, List<EntityColorData> colorData)
         {
             _busPrefab = busPrefab;
-            _colorMap = new Dictionary<EntityColor, Material>();
-            foreach (var data in colorData)
-            {
-                if (!_colorMap.ContainsKey(data.ColorType))
-                {
-                    _colorMap.Add(data.ColorType, data.Material);
-                }
-            }
+            _colorMap = ColorMapBuilder.Build(colorData);
         }
 
         public GameObject CreateBus(BusLineSaveData busData, Transform parent, Vector3 position)
         {
-            GameObject spawnedBus = Object.Instantiate(_busPrefab, position, Quaternion.identity, parent);
-
+            var spawnedBus = Object.Instantiate(_busPrefab, position, Quaternion.identity, parent);
             ApplyColor(spawnedBus, busData.color);
             return spawnedBus;
         }
 
-        private void ApplyColor(GameObject spawnedEntity, EntityColor colorEnum)
+        private void ApplyColor(GameObject entity, EntityColor color)
         {
-            if (_colorMap.TryGetValue(colorEnum, out var material))
+            if (!_colorMap.TryGetValue(color, out var material))
             {
-                if (spawnedEntity.TryGetComponent(out BusController controller))
-                {
-                    controller.SetMaterial(material);
-                }
+                Debug.LogWarning($"Material not found for color: {color}");
+                return;
             }
-            else
-            {
-                Debug.LogWarning("cannotfoundmat");
-            }
+
+            if (entity.TryGetComponent(out BusController controller))
+                controller.SetMaterial(material);
         }
     }
 }

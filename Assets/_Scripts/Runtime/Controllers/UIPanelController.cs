@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Signals;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Controllers
@@ -9,70 +8,53 @@ namespace _Scripts.Runtime.Controllers
     public class UIPanelController : MonoBehaviour
     {
         [SerializeField] private List<Transform> layers = new List<Transform>();
-        private readonly Dictionary<UIPanelType, GameObject> _panelCache = new Dictionary<UIPanelType, GameObject>();
+        private readonly Dictionary<UIPanelType, GameObject> _panelCache = new();
 
         private void OnEnable()
-        {
-            SubscribeEvents();
-        }
-
-        private void SubscribeEvents()
         {
             CoreUISignals.Instance.OnOpenPanel += OnOpenPanel;
             CoreUISignals.Instance.OnClosePanel += OnClosePanel;
             CoreUISignals.Instance.OnCloseAllPanels += OnCloseAllPanels;
         }
 
-        private void OnOpenPanel(UIPanelType panelType, int layerValue)
+        private void OnOpenPanel(UIPanelType panelType, int layerIndex)
         {
-            CoreUISignals.Instance.FireOnClosePanel(layerValue);
+            OnClosePanel(layerIndex);
+
             if (_panelCache.TryGetValue(panelType, out var panel))
             {
                 panel.SetActive(true);
                 panel.transform.SetAsLastSibling();
+                return;
             }
-            else
-            {
-                GameObject newPanel = Instantiate(Resources.Load<GameObject>($"UIPanels/{panelType}Panel"),
-                    layers[layerValue].transform);
-                _panelCache.Add(panelType, newPanel);
-            }
+
+            var newPanel = Instantiate(
+                Resources.Load<GameObject>($"UIPanels/{panelType}Panel"),
+                layers[layerIndex]);
+
+            _panelCache.Add(panelType, newPanel);
         }
 
-        private void OnClosePanel(int layerValue)
+        private void OnClosePanel(int layerIndex)
         {
-            if (layerValue >= layers.Count) return;
-            Transform targetLayer = layers[layerValue];
+            if (layerIndex >= layers.Count) return;
 
-            for (int i = 0; i < targetLayer.childCount; i++)
-            {
-                targetLayer.GetChild(i).gameObject.SetActive(false);
-            }
+            Transform layer = layers[layerIndex];
+            for (int i = 0; i < layer.childCount; i++)
+                layer.GetChild(i).gameObject.SetActive(false);
         }
 
         private void OnCloseAllPanels()
         {
             foreach (var panel in _panelCache.Values)
-            {
-                if (panel != null)
-                {
-                    panel.SetActive(false);
-                }
-            }
+                panel?.SetActive(false);
         }
 
         private void OnDisable()
         {
-            UnsubscribeEvents();
-        }
-
-        private void UnsubscribeEvents()
-        {
-            {
-                CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
-                CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
-                CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
-            }
+            CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
+            CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
+            CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
         }
     }
 }

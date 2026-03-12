@@ -1,44 +1,27 @@
 ﻿using System;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Extensions;
-using _Scripts.Runtime.Signals.Interfaces;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Signals
 {
-    public class BusSignals : MonoSingleton<BusSignals>, IBusSignals
+    public class BusSignals : MonoSingleton<BusSignals>
     {
         public event Func<EntityColor> OnGetActiveBusColor = () => EntityColor.Default;
-        public event Func<EntityColor, Vector3> OnGetBusPosition = color => Vector3.zero;
+        public event Func<EntityColor, Vector3> OnGetBusPosition = _ => Vector3.zero;
         public event Func<EntityColor, bool> OnHasAvailableSlot = _ => false;
-        public event Func<EntityColor, Vector3> OnGetSlotPosition = _ => Vector3.zero;
         public event Action OnPassengerBoardedBus = delegate { };
+        public event Action<EntityColor> OnBusIncoming = delegate { };
         public event Action<EntityColor> OnBusArrived = delegate { };
+        public event Action<EntityColor> OnBusLeft = delegate { };
+        public event Action<Vector3> OnStationPositionReady = delegate { };
 
-
-        public void FireOnBusArrived(EntityColor color)
-        {
-            OnBusArrived.Invoke(color);
-        }
-
-        public EntityColor FireOnGetActiveBusColor()
-        {
-            return OnGetActiveBusColor.Invoke();
-        }
-
-        public bool FireOnHasAvailableSlot(EntityColor color)
-        {
-            return OnHasAvailableSlot.Invoke(color);
-        }
-
-        public Vector3 FireOnGetBusPosition(EntityColor color)
-        {
-            return OnGetSlotPosition.Invoke(color);
-        }
-
-        public void FireOnPassengerBoardedBus()
-        {
-            OnPassengerBoardedBus.Invoke();
-        }
+        public Vector3 FireOnGetBusPosition(EntityColor color) => OnGetBusPosition.Invoke(color);
+        public bool FireOnHasAvailableSlot(EntityColor color) => OnHasAvailableSlot.Invoke(color);
+        public void FireOnPassengerBoardedBus() => OnPassengerBoardedBus.Invoke();
+        public void FireOnBusIncoming(EntityColor color) => OnBusIncoming.Invoke(color);
+        public void FireOnBusArrived(EntityColor color) => OnBusArrived.Invoke(color);
+        public void FireOnBusLeft(EntityColor color) => OnBusLeft.Invoke(color);
+        public void FireOnStationPositionReady(Vector3 pos) => OnStationPositionReady.Invoke(pos);
     }
 }

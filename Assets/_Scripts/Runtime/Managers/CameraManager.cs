@@ -6,33 +6,30 @@ namespace _Scripts.Runtime.Managers
 {
     public class CameraManager : MonoBehaviour
     {
-        private Vector3 _initPos = Vector3.zero;
         [SerializeField] private Vector3 offset;
-        private CinemachineVirtualCamera _virtualCamera = null;
+        private CinemachineVirtualCamera _virtualCamera;
 
-        private void Awake()
-        {
-            Init();
-        }
-
-        private void Init()
-        {
-            if (_virtualCamera != null) return;
-            _virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
-        }
+        private void Awake() => _virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
 
         private void OnEnable() => CameraSignals.Instance.OnSetCameraPosition += SetCameraPosition;
 
-
         private void SetCameraPosition(Vector3 gridCenter)
         {
-            _virtualCamera.transform.position = new Vector3(
-                gridCenter.z + offset.x, 
-                10, // todo:get y in variable
-                gridCenter.x + offset.z 
-            );
+            float adjustedY = 10f;
+            float adjustedZ = gridCenter.x + offset.z;
 
-            
+            if (gridCenter.x > 6f)
+            {
+                float excess = gridCenter.x - 6f;
+                adjustedY += excess * 2.5f;
+                adjustedZ += excess * 1.5f;
+            }
+
+            _virtualCamera.transform.position = new Vector3(
+                gridCenter.z + offset.x,
+                adjustedY,
+                adjustedZ
+            );
         }
 
         private void OnDisable() => CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
