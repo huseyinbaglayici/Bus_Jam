@@ -14,6 +14,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
         [SerializeField] private Animator animator;
         [SerializeField] private Renderer charModelRenderer;
         [SerializeField] private GameObject charModel;
+        [SerializeField] private SpriteRenderer angryEmoji;
+
 
         public PassengerEntity Entity { get; private set; }
 
@@ -38,10 +40,12 @@ namespace _Scripts.Runtime.Gameplay.Entities.Passenger
 
             _idleState = new PassengerIdleState(Entity);
             _movingState = new PassengerMovingState(Entity, charModel.transform, animator);
-            _stuckState = new PassengerStuckState(Entity);
+            _stuckState = new PassengerStuckState(Entity, charModel.transform, angryEmoji);
 
             _stateMachine.AddTransition(_idleState, _movingState, new HasPathPredicate(Entity));
             _stateMachine.AddTransition(_idleState, _stuckState, new IsBlockedPredicate(Entity));
+            _stateMachine.AddTransition(_stuckState, _movingState, new HasPathPredicate(Entity));
+            _stateMachine.AddTransition(_stuckState, _idleState, new IsUnblockedPredicate(Entity));
             _stateMachine.SetState(_idleState);
         }
 

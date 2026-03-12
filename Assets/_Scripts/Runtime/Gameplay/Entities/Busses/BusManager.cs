@@ -162,8 +162,11 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private EntityColor OnGetActiveBusColor() =>
             _activeBus != null ? _activeBus.BusColor : EntityColor.Default;
 
-        private bool HandleHasAvailableSlot(EntityColor passengerColor) =>
-            _activeBus != null && _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
+        private bool HandleHasAvailableSlot(EntityColor passengerColor)
+        {
+            bool result = _activeBus != null && _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
+            return result;
+        }
 
         private void HandlePassengerBoardedBus()
         {

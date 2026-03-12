@@ -22,15 +22,22 @@ namespace _Scripts.Runtime.Managers
         {
             Vector2Int gridPos = new Vector2Int(x, y);
             if (!_passengerRegistry.TryGetValue(gridPos, out var controller)) return;
-
-            if (!TryGetAvailableTarget(controller, out Vector3 targetPos, out PassengerTargetType targetType)) return;
+            if (controller.Entity.CurrentTarget != PassengerTargetType.None) return;
 
             List<GridNode> gridPath = GridSignals.Instance.FireOnCalculatePathToExit(x, y);
-            if (gridPath == null) return;
+            if (gridPath == null)
+            {
+                controller.Entity.PathPoints.Clear();
+                controller.Entity.IsTapped = true;
+                controller.Entity.IsMoveable = false;
+                return;
+            }
 
+            controller.Entity.IsTapped = false;
+
+            if (!TryGetAvailableTarget(controller, out Vector3 targetPos, out PassengerTargetType targetType)) return;
             Queue<Vector3> worldPath = ConvertGridPathToWorld(gridPath);
             worldPath.Enqueue(targetPos);
-
             DispatchPathToPassenger(controller, worldPath, targetType);
         }
 
