@@ -94,6 +94,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
                 busController.Initialize(busData.color);
                 _busQueue.Enqueue(busController);
+                
+                BusSignals.Instance.FireOnBusIncoming(busController.BusColor);
             }
         }
 
