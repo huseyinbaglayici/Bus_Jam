@@ -3,14 +3,17 @@ using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
 using UnityEngine;
 
-public static class ColorMapBuilder
+namespace _Scripts.Runtime.Factories
 {
-    public static Dictionary<EntityColor, Material> Build(List<EntityColorData> colorData)
+    public static class ColorMapBuilder
     {
-        var map = new Dictionary<EntityColor, Material>();
-        foreach (var data in colorData)
-            if (!map.ContainsKey(data.ColorType))
-                map.Add(data.ColorType, data.Material);
-        return map;
+        public static Dictionary<EntityColor, Material> Build(List<EntityColorData> colorData)
+        {
+            var map = new Dictionary<EntityColor, Material>();
+            foreach (var data in colorData)
+                if (!map.ContainsKey(data.ColorType))
+                    map.Add(data.ColorType, data.Material);
+            return map;
+        }
     }
 }
