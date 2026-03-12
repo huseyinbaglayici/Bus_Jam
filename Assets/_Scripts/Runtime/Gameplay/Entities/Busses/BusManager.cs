@@ -33,6 +33,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private Vector3 _stationPosition;
         private Vector3 _queueSpacing;
 
+
         private void Awake()
         {
             _busFactory = new BusFactory(busPrefab, colorDatabase.Colors);
@@ -50,6 +51,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             BusSignals.Instance.OnGetActiveBusColor += OnGetActiveBusColor;
             BusSignals.Instance.OnHasAvailableSlot += HandleHasAvailableSlot;
             BusSignals.Instance.OnPassengerBoardedBus += HandlePassengerBoardedBus;
+            BusSignals.Instance.OnGetNextBusColor += HandleGetNextBusColor;
         }
 
         private void UnsubscribeEvents()
@@ -61,6 +63,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             BusSignals.Instance.OnGetActiveBusColor -= OnGetActiveBusColor;
             BusSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
             BusSignals.Instance.OnPassengerBoardedBus -= HandlePassengerBoardedBus;
+            BusSignals.Instance.OnGetNextBusColor -= HandleGetNextBusColor;
         }
 
         #region Initialization
@@ -94,8 +97,6 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
                 busController.Initialize(busData.color);
                 _busQueue.Enqueue(busController);
-
-                BusSignals.Instance.FireOnBusIncoming(busController.BusColor);
             }
         }
 
@@ -114,7 +115,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
             }
 
             _activeBus = _busQueue.Dequeue();
-            BusSignals.Instance.FireOnBusIncoming(_activeBus.BusColor);
+
 
             _activeBus.transform
                 .DOMove(_stationPosition, BusArriveDuration)
@@ -135,6 +136,10 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
                 index++;
             }
         }
+
+        private EntityColor HandleGetNextBusColor() =>
+            _busQueue.Count > 0 ? _busQueue.Peek().BusColor : EntityColor.Default;
+
 
         private void SendActiveBusAway()
         {

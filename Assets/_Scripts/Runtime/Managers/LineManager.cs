@@ -32,9 +32,10 @@ namespace _Scripts.Runtime.Managers
 
         private readonly List<GameObject> _lineCells = new List<GameObject>();
         private readonly List<LineSlot> _lineSlots = new List<LineSlot>();
-        private readonly HashSet<EntityColor> _incomingBusColors = new HashSet<EntityColor>();
         private Transform _lineHolder;
         private LineFactory _lineFactory;
+        private bool _isBusDeparting;
+
 
         private void Awake() => _lineFactory = new LineFactory(lineCellPrefab);
 
@@ -44,8 +45,8 @@ namespace _Scripts.Runtime.Managers
             LineSignals.Instance.OnHasAvailableSlot += HandleHasAvailableSlot;
             LineSignals.Instance.OnGetSlotPosition += HandleGetSlotPosition;
             BusSignals.Instance.OnBusArrived += CheckLineForMatchingPassengers;
-            BusSignals.Instance.OnBusIncoming += HandleBusIncoming;
             BusSignals.Instance.OnBusLeft += HandleBusLeft;
+            BusSignals.Instance.OnBusArrived += HandleBusArrived;
         }
 
         #region Line Initialization
@@ -86,10 +87,10 @@ namespace _Scripts.Runtime.Managers
 
         #region Signal Handlers
 
-        private void HandleBusIncoming(EntityColor color) => _incomingBusColors.Add(color);
-        private void HandleBusLeft(EntityColor color) => _incomingBusColors.Remove(color);
         private int OnSendLineCount() => _lineCells.Count;
         private bool HandleHasAvailableSlot() => _lineSlots.Any(s => !s.IsOccupied);
+        private void HandleBusLeft(EntityColor color) => _isBusDeparting = true;
+        private void HandleBusArrived(EntityColor color) => _isBusDeparting = true;
 
         private void CheckLineForMatchingPassengers(EntityColor busColor)
         {
@@ -142,7 +143,12 @@ namespace _Scripts.Runtime.Managers
         private void CheckGameOverCondition()
         {
             if (!_lineSlots.All(s => s.IsOccupied)) return;
-            if (_lineSlots.Any(s => _incomingBusColors.Contains(s.Passenger.Entity.Color))) return;
+
+            if (_isBusDeparting)
+            {
+                EntityColor nextBusColor = BusSignals.Instance.FireOnGetNextBusColor();
+                if (_lineSlots.Any(s => s.Passenger.Entity.Color == nextBusColor)) return;
+            }
 
             CoreGameSignals.Instance.FireOnLevelFailed();
         }
@@ -156,8 +162,8 @@ namespace _Scripts.Runtime.Managers
             LineSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
             LineSignals.Instance.OnGetSlotPosition -= HandleGetSlotPosition;
             BusSignals.Instance.OnBusArrived -= CheckLineForMatchingPassengers;
-            BusSignals.Instance.OnBusIncoming -= HandleBusIncoming;
             BusSignals.Instance.OnBusLeft -= HandleBusLeft;
+            BusSignals.Instance.OnBusArrived -= HandleBusArrived;
         }
     }
 }

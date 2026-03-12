@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 using _Scripts.Runtime.Extensions;
 
 namespace _Scripts.Runtime.Signals
