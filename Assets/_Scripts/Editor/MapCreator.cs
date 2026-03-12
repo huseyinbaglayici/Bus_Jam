@@ -35,10 +35,15 @@ namespace _Scripts.Editor
         private static readonly Dictionary<EntityColor, (Color bg, Color text)> ColorLookup = new()
         {
             { EntityColor.White, (Color.white, Color.black) },
-            { EntityColor.Blue, (Color.blue, Color.white) },
+            { EntityColor.DarkBlue, (new Color(0.1f, 0.23f, 0.42f), Color.white) },
+            { EntityColor.LightBlue, (new Color(0.36f, 0.78f, 0.96f), Color.black) },
             { EntityColor.Yellow, (Color.yellow, Color.black) },
-            { EntityColor.Green, (Color.green, Color.white) },
+            { EntityColor.LightGreen, (new Color(0.48f, 0.78f, 0.49f), Color.black) },
+            { EntityColor.DarkGreen, (new Color(0.18f, 0.42f, 0.31f), Color.white) },
             { EntityColor.Pink, (Color.magenta, Color.white) },
+            { EntityColor.Purple, (new Color(0.5f, 0f, 0.5f), Color.white) },
+            { EntityColor.Orange, (new Color(1f, 0.5f, 0f), Color.white) },
+            { EntityColor.Red, (Color.red, Color.white) },
             { EntityColor.Default, (new Color(0.15f, 0.15f, 0.15f), Color.white) }
         };
 

@@ -27,7 +27,8 @@ namespace _Scripts.Runtime.Managers
     public class LineManager : MonoBehaviour
     {
         [SerializeField] private GameObject lineCellPrefab;
-        private const float LineZOffset = 2.9f;
+        private const float LineZOffset = 3f;
+        private const float LineXOffset = 1.1f;
 
         private readonly List<GameObject> _lineCells = new List<GameObject>();
         private readonly List<LineSlot> _lineSlots = new List<LineSlot>();
@@ -40,7 +41,6 @@ namespace _Scripts.Runtime.Managers
         private void OnEnable()
         {
             CoreGameSignals.Instance.OnGridReady += GenerateLine;
-            ActiveLevelSignals.Instance.OnGetPassengerLineCount += OnSendLineCount;
             LineSignals.Instance.OnHasAvailableSlot += HandleHasAvailableSlot;
             LineSignals.Instance.OnGetSlotPosition += HandleGetSlotPosition;
             BusSignals.Instance.OnBusArrived += CheckLineForMatchingPassengers;
@@ -54,7 +54,7 @@ namespace _Scripts.Runtime.Managers
         {
             CreateHolder();
 
-            float gridCenterX = ((gridXCount - 1) * ConstantUtil.SpaceModifier) / 2f;
+            float gridCenterX = (((gridXCount - 1) * ConstantUtil.SpaceModifier) / 2f) * LineXOffset;
             float gridTopZ = (gridZCount - 1) * ConstantUtil.SpaceModifier;
 
             _lineHolder.position = new Vector3(gridCenterX, 0, gridTopZ + LineZOffset);
@@ -154,8 +154,8 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             CoreGameSignals.Instance.OnGridReady -= GenerateLine;
-            ActiveLevelSignals.Instance.OnGetPassengerLineCount -= OnSendLineCount;
             LineSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
             LineSignals.Instance.OnGetSlotPosition -= HandleGetSlotPosition;
             BusSignals.Instance.OnBusArrived -= CheckLineForMatchingPassengers;

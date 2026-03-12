@@ -20,6 +20,10 @@ namespace _Scripts.Runtime.Managers
             GridSignals.Instance.FireOnPassengerSelected(node.X, node.Y);
         }
 
-        private void OnDisable() => InputSignals.Instance.OnInputTaken -= HandleInput;
+        private void OnDisable()
+        {
+            if (!CoreGameSignals.IsAvailable) return;
+            InputSignals.Instance.OnInputTaken -= HandleInput;
+        }
     }
 }

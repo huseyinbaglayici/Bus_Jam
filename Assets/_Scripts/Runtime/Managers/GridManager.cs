@@ -17,8 +17,8 @@ namespace _Scripts.Runtime.Managers
         [SerializeField] private GameObject obstructedPrefab;
         [SerializeField] private GameObject passengerPrefab;
 
-        [Header("Entity Setup")] [SerializeField]
-        private List<EntityColorData> colorDatabase;
+        [Header("Color Database")] [SerializeField]
+        private ColorDatabaseSO colorDatabase;
 
         private Transform _gridHolder;
         private CellFactory _cellFactory;
@@ -27,13 +27,13 @@ namespace _Scripts.Runtime.Managers
 
         private void Awake()
         {
-            _cellFactory = new CellFactory(walkableEmptyPrefab, obstructedPrefab, passengerPrefab, colorDatabase);
+            _cellFactory = new CellFactory(walkableEmptyPrefab, obstructedPrefab, passengerPrefab,
+                colorDatabase.Colors);
         }
 
         private void OnEnable()
         {
             CoreGameSignals.Instance.OnLevelDataLoaded += GenerateLevel;
-            ActiveLevelSignals.Instance.OnGetCenterOfActiveGrid += OnSendCenterOfActiveGrid;
             GridSignals.Instance.OnGetNode += GetNodeFromGrid;
             GridSignals.Instance.OnFreeNode += HandleFreeNode;
             GridSignals.Instance.OnCalculatePathToExit += HandleCalculatePathToExit;
@@ -93,8 +93,8 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             CoreGameSignals.Instance.OnLevelDataLoaded -= GenerateLevel;
-            ActiveLevelSignals.Instance.OnGetCenterOfActiveGrid -= OnSendCenterOfActiveGrid;
             GridSignals.Instance.OnGetNode -= GetNodeFromGrid;
             GridSignals.Instance.OnFreeNode -= HandleFreeNode;
             GridSignals.Instance.OnCalculatePathToExit -= HandleCalculatePathToExit;

@@ -13,7 +13,9 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
     public class BusManager : MonoBehaviour
     {
         [Header("Prefab")] [SerializeField] private GameObject busPrefab;
-        [SerializeField] private List<EntityColorData> colorDatabase;
+
+        [Header("Color Database")] [SerializeField]
+        private ColorDatabaseSO colorDatabase;
 
         private const float StationZOffset = 5.5f;
         private const float StationXOffset = 5f;
@@ -27,13 +29,13 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private Transform _busHolder;
         private BusFactory _busFactory;
         private BusController _activeBus;
-        private readonly Queue<BusController> _busQueue = new Queue<BusController>();
+        private Queue<BusController> _busQueue = new Queue<BusController>();
         private Vector3 _stationPosition;
         private Vector3 _queueSpacing;
 
         private void Awake()
         {
-            _busFactory = new BusFactory(busPrefab, colorDatabase);
+            _busFactory = new BusFactory(busPrefab, colorDatabase.Colors);
             _queueSpacing = new Vector3(-StationXOffset, 0, 0);
         }
 
@@ -162,11 +164,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
         private EntityColor OnGetActiveBusColor() =>
             _activeBus != null ? _activeBus.BusColor : EntityColor.Default;
 
-        private bool HandleHasAvailableSlot(EntityColor passengerColor)
-        {
-            bool result = _activeBus != null && _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
-            return result;
-        }
+        private bool HandleHasAvailableSlot(EntityColor passengerColor) =>
+            _activeBus != null && _activeBus.BusColor == passengerColor && _activeBus.HasAvailableSlot;
 
         private void HandlePassengerBoardedBus()
         {

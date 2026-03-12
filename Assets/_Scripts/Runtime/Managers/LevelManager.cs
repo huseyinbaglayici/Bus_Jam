@@ -42,6 +42,7 @@ namespace _Scripts.Runtime.Managers
 
         private void UnsubscribeEvents()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitializeWrapper;
             CoreGameSignals.Instance.OnNextLevel -= OnNextLevelWrapper;
             CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevelWrapper;

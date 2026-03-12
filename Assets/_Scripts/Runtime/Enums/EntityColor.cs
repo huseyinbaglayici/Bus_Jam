@@ -7,9 +7,14 @@ namespace _Scripts.Runtime.Enums
     {
         Default,
         White,
-        Blue,
+        LightBlue,
+        DarkBlue,
         Yellow,
-        Green,
-        Pink
+        LightGreen,
+        DarkGreen,
+        Pink,
+        Purple,
+        Orange,
+        Red
     }
 }

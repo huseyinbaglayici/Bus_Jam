@@ -90,6 +90,7 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             PassengerSignals.Instance.OnRegisterPassenger -= RegisterPassenger;
             GridSignals.Instance.OnPassengerSelected -= OnPassengerSelected;
         }

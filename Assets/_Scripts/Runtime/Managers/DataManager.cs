@@ -27,6 +27,7 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             SaveSignals.Instance.OnSaveLevel -= SaveLevel;
             SaveSignals.Instance.OnGetLevelId -= GetLevelId;
             SaveSignals.Instance.OnGetLevelData -= GetLevelData;

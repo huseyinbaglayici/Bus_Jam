@@ -24,6 +24,7 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             BusSignals.Instance.OnStationPositionReady -= OnAlignRoad;
         }
     }

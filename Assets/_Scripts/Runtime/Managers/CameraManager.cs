@@ -8,30 +8,52 @@ namespace _Scripts.Runtime.Managers
     {
         [SerializeField] private Vector3 offset;
         private CinemachineVirtualCamera _virtualCamera;
+        private const float Multiplier = 1.5f;
 
         private void Awake() => _virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
 
-        private void OnEnable() => CameraSignals.Instance.OnSetCameraPosition += SetCameraPosition;
+        private void OnEnable()
+        {
+            CameraSignals.Instance.OnSetCameraPosition += SetCameraPosition;
+            CameraSignals.Instance.OnSetCameraZoom += SetCameraZoom;
+        }
+
+        private void SetCameraZoom(int gridX, int gridZ)
+        {
+            float baseY = 10f;
+            float xFactor = Mathf.Max(0, gridX - 5) * Multiplier;
+            float zFactor = Mathf.Max(0, gridZ - 5) * Multiplier;
+
+            _targetY = baseY + Mathf.Max(xFactor, zFactor);
+        }
+
+        private float _targetY = 2f;
 
         private void SetCameraPosition(Vector3 gridCenter)
         {
-            float adjustedY = 10f;
+            float adjustedX = gridCenter.z + offset.x;
             float adjustedZ = gridCenter.x + offset.z;
 
             if (gridCenter.x > 6f)
             {
                 float excess = gridCenter.x - 6f;
-                adjustedY += excess * 2.5f;
-                adjustedZ += excess * 1.5f;
+                adjustedZ += excess * Multiplier;
             }
 
+            float zPullback = (_targetY - 10f) * .7f;
+
             _virtualCamera.transform.position = new Vector3(
-                gridCenter.z + offset.x,
-                adjustedY,
-                adjustedZ
+                adjustedX,
+                _targetY,
+                adjustedZ - zPullback
             );
         }
 
-        private void OnDisable() => CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
+        private void OnDisable()
+        {
+            if (!CoreGameSignals.IsAvailable) return;
+            CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
+            CameraSignals.Instance.OnSetCameraZoom -= SetCameraZoom;
+        }
     }
 }

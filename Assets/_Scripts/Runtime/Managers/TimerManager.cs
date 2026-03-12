@@ -64,6 +64,7 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
+            if (!CoreGameSignals.IsAvailable) return;
             InputSignals.Instance.OnFirstTouchTaken -= CountDownStart;
             CoreGameSignals.Instance.OnLevelSuccessful -= CountDownEnd;
             CoreGameSignals.Instance.OnLevelFailed -= CountDownEnd;
