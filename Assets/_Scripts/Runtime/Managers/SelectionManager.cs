@@ -1,5 +1,6 @@
 ﻿using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using _Scripts.Runtime.Utils;
 using UnityEngine;
@@ -22,8 +23,8 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            InputSignals.Instance.OnInputTaken -= HandleInput;
+            if (!ApplicationState.IsQuitting)
+                InputSignals.Instance.OnInputTaken -= HandleInput;
         }
     }
 }

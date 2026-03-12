@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using UnityEngine;
 
@@ -52,9 +53,12 @@ namespace _Scripts.Runtime.Controllers
 
         private void OnDisable()
         {
-            CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
-            CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
-            CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreUISignals.Instance.OnOpenPanel -= OnOpenPanel;
+                CoreUISignals.Instance.OnClosePanel -= OnClosePanel;
+                CoreUISignals.Instance.OnCloseAllPanels -= OnCloseAllPanels;
+            }
         }
     }
 }

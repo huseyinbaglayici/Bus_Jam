@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Factories;
 using _Scripts.Runtime.Signals;
 using _Scripts.Runtime.Utils;
@@ -56,14 +57,17 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
         private void UnsubscribeEvents()
         {
-            CoreGameSignals.Instance.OnGridReady -= OnGridReady;
-            CoreGameSignals.Instance.OnPlay -= HandleBusSeq;
-            ActiveLevelSignals.Instance.OnGetBusCount -= OnSendBusCount;
-            BusSignals.Instance.OnGetBusPosition -= HandleGetBusPosition;
-            BusSignals.Instance.OnGetActiveBusColor -= OnGetActiveBusColor;
-            BusSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
-            BusSignals.Instance.OnPassengerBoardedBus -= HandlePassengerBoardedBus;
-            BusSignals.Instance.OnGetNextBusColor -= HandleGetNextBusColor;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnGridReady -= OnGridReady;
+                CoreGameSignals.Instance.OnPlay -= HandleBusSeq;
+                ActiveLevelSignals.Instance.OnGetBusCount -= OnSendBusCount;
+                BusSignals.Instance.OnGetBusPosition -= HandleGetBusPosition;
+                BusSignals.Instance.OnGetActiveBusColor -= OnGetActiveBusColor;
+                BusSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
+                BusSignals.Instance.OnPassengerBoardedBus -= HandlePassengerBoardedBus;
+                BusSignals.Instance.OnGetNextBusColor -= HandleGetNextBusColor;
+            }
         }
 
         #region Initialization

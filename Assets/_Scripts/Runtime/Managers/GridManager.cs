@@ -2,6 +2,7 @@
 using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Factories;
 using _Scripts.Runtime.Gameplay.Entities.Passenger;
 using _Scripts.Runtime.Signals;
@@ -81,9 +82,6 @@ namespace _Scripts.Runtime.Managers
 
         #region Signal Handlers
 
-        private Vector3 OnSendCenterOfActiveGrid() =>
-            BusJamMathUtil.GetCenterOfGrid(_gridSize.x, _gridSize.y, ConstantUtil.SpaceModifier);
-
         private GridNode GetNodeFromGrid(int x, int y) => _logicGrid?.GetNode(x, y);
 
         private void HandleFreeNode(int x, int y) => _logicGrid?.FreeNode(x, y);
@@ -95,11 +93,13 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            CoreGameSignals.Instance.OnLevelDataLoaded -= GenerateLevel;
-            GridSignals.Instance.OnGetNode -= GetNodeFromGrid;
-            GridSignals.Instance.OnFreeNode -= HandleFreeNode;
-            GridSignals.Instance.OnCalculatePathToExit -= HandleCalculatePathToExit;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnLevelDataLoaded -= GenerateLevel;
+                GridSignals.Instance.OnGetNode -= GetNodeFromGrid;
+                GridSignals.Instance.OnFreeNode -= HandleFreeNode;
+                GridSignals.Instance.OnCalculatePathToExit -= HandleCalculatePathToExit;
+            }
         }
     }
 }

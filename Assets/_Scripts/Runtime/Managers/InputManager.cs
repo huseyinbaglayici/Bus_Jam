@@ -1,4 +1,5 @@
-﻿using _Scripts.Runtime.Signals;
+﻿using _Scripts.Runtime.Extensions;
+using _Scripts.Runtime.Signals;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -64,12 +65,15 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            CoreGameSignals.Instance.OnPlay -= EnableTouch;
-            CoreGameSignals.Instance.OnLevelFailed -= DisableTouch;
-            CoreGameSignals.Instance.OnLevelSuccessful -= DisableTouch;
-            CoreGameSignals.Instance.OnReset -= ResetInput;
-            CoreGameSignals.Instance.OnRestartLevel -= ResetInput;
-            InputSignals.Instance.OnFirstTouchTaken -= OnFirstTouchTaken;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnPlay -= EnableTouch;
+                CoreGameSignals.Instance.OnLevelFailed -= DisableTouch;
+                CoreGameSignals.Instance.OnLevelSuccessful -= DisableTouch;
+                CoreGameSignals.Instance.OnReset -= ResetInput;
+                CoreGameSignals.Instance.OnRestartLevel -= ResetInput;
+                InputSignals.Instance.OnFirstTouchTaken -= OnFirstTouchTaken;
+            }
         }
     }
 }

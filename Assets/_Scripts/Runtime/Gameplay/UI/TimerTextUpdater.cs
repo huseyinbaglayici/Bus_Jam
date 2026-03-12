@@ -1,4 +1,4 @@
-﻿using System;
+﻿using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using TMPro;
 using UnityEngine;
@@ -23,7 +23,8 @@ namespace _Scripts.Runtime.Gameplay.UI
 
         private void OnDisable()
         {
-            UISignals.Instance.OnSetTimerValue -= OnSetTimerText;
+            if (!ApplicationState.IsQuitting)
+                UISignals.Instance.OnSetTimerValue -= OnSetTimerText;
         }
     }
 }

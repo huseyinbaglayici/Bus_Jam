@@ -2,16 +2,25 @@
 
 namespace _Scripts.Runtime.Extensions
 {
+    public static class ApplicationState
+    {
+        public static bool IsQuitting { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Reset() => IsQuitting = false; // Editor reset
+
+        public static void SetQuitting() => IsQuitting = true;
+    }
+
     public class MonoSingleton<T> : MonoBehaviour where T : Component
     {
         private static T _instance;
-        private static bool _isQuitting;
 
         public static T Instance
         {
             get
             {
-                if (_isQuitting) return null;
+                if (ApplicationState.IsQuitting) return null;
                 if (_instance != null) return _instance;
 
                 _instance = FindObjectOfType<T>();
@@ -22,7 +31,7 @@ namespace _Scripts.Runtime.Extensions
             }
         }
 
-        public static bool IsAvailable => _instance != null;
+        public static bool IsAvailable => _instance != null && !ApplicationState.IsQuitting;
 
         protected virtual void Awake()
         {
@@ -40,6 +49,6 @@ namespace _Scripts.Runtime.Extensions
             if (_instance == this) _instance = null;
         }
 
-        private void OnApplicationQuit() => _isQuitting = true;
+        private void OnApplicationQuit() => ApplicationState.SetQuitting();
     }
 }

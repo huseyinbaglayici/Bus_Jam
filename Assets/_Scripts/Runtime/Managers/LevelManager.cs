@@ -1,6 +1,7 @@
 ﻿using System;
 using _Scripts.Runtime.Commands;
 using _Scripts.Runtime.Data.UnityObjects;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using _Scripts.Runtime.Utils;
 using Cysharp.Threading.Tasks;
@@ -42,11 +43,13 @@ namespace _Scripts.Runtime.Managers
 
         private void UnsubscribeEvents()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitializeWrapper;
-            CoreGameSignals.Instance.OnNextLevel -= OnNextLevelWrapper;
-            CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevelWrapper;
-            ActiveLevelSignals.Instance.OnGetLevelTime -= OnSendTimerData;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitializeWrapper;
+                CoreGameSignals.Instance.OnNextLevel -= OnNextLevelWrapper;
+                CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevelWrapper;
+                ActiveLevelSignals.Instance.OnGetLevelTime -= OnSendTimerData;
+            }
         }
 
         // UniTaskVoid handler'lar Action delegate'e direkt bağlanamadığı için wrapper kullanıyoruz

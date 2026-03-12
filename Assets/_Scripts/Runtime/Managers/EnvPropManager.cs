@@ -1,4 +1,5 @@
-﻿using _Scripts.Runtime.Signals;
+﻿using _Scripts.Runtime.Extensions;
+using _Scripts.Runtime.Signals;
 using UnityEngine;
 
 namespace _Scripts.Runtime.Managers
@@ -24,8 +25,8 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            BusSignals.Instance.OnStationPositionReady -= OnAlignRoad;
+            if (!ApplicationState.IsQuitting)
+                BusSignals.Instance.OnStationPositionReady -= OnAlignRoad;
         }
     }
 }

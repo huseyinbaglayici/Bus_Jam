@@ -1,4 +1,5 @@
-﻿using _Scripts.Runtime.Signals;
+﻿using _Scripts.Runtime.Extensions;
+using _Scripts.Runtime.Signals;
 using Cinemachine;
 using UnityEngine;
 
@@ -51,9 +52,11 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
-            CameraSignals.Instance.OnSetCameraZoom -= SetCameraZoom;
+            if (!ApplicationState.IsQuitting)
+            {
+                CameraSignals.Instance.OnSetCameraPosition -= SetCameraPosition;
+                CameraSignals.Instance.OnSetCameraZoom -= SetCameraZoom;
+            }
         }
     }
 }

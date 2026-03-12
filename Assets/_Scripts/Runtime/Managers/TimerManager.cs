@@ -1,4 +1,5 @@
-﻿using _Scripts.Runtime.Signals;
+﻿using _Scripts.Runtime.Extensions;
+using _Scripts.Runtime.Signals;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -64,11 +65,13 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            InputSignals.Instance.OnFirstTouchTaken -= CountDownStart;
-            CoreGameSignals.Instance.OnLevelSuccessful -= CountDownEnd;
-            CoreGameSignals.Instance.OnLevelFailed -= CountDownEnd;
-            CoreGameSignals.Instance.OnReset -= OnResetTimer;
+            if (!ApplicationState.IsQuitting)
+            {
+                InputSignals.Instance.OnFirstTouchTaken -= CountDownStart;
+                CoreGameSignals.Instance.OnLevelSuccessful -= CountDownEnd;
+                CoreGameSignals.Instance.OnLevelFailed -= CountDownEnd;
+                CoreGameSignals.Instance.OnReset -= OnResetTimer;
+            }
         }
     }
 }

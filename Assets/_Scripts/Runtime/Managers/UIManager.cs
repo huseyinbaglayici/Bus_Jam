@@ -1,4 +1,5 @@
 ﻿using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Signals;
 using UnityEngine;
 
@@ -61,11 +62,14 @@ namespace _Scripts.Runtime.Managers
 
         private void UnSubscribeEvents()
         {
-            CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitialize;
-            CoreGameSignals.Instance.OnPlay -= OnPlay;
-            CoreGameSignals.Instance.OnLevelFailed -= OnLevelFailed;
-            CoreGameSignals.Instance.OnLevelSuccessful -= OnLevelSuccessful;
-            CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevel;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnLevelInitialize -= OnLevelInitialize;
+                CoreGameSignals.Instance.OnPlay -= OnPlay;
+                CoreGameSignals.Instance.OnLevelFailed -= OnLevelFailed;
+                CoreGameSignals.Instance.OnLevelSuccessful -= OnLevelSuccessful;
+                CoreGameSignals.Instance.OnRestartLevel -= OnRestartLevel;
+            }
         }
     }
 }

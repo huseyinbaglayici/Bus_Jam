@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Gameplay.Entities.Passenger;
 using _Scripts.Runtime.Signals;
 using _Scripts.Runtime.Utils;
@@ -90,9 +91,11 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            PassengerSignals.Instance.OnRegisterPassenger -= RegisterPassenger;
-            GridSignals.Instance.OnPassengerSelected -= OnPassengerSelected;
+            if (!ApplicationState.IsQuitting)
+            {
+                PassengerSignals.Instance.OnRegisterPassenger -= RegisterPassenger;
+                GridSignals.Instance.OnPassengerSelected -= OnPassengerSelected;
+            }
         }
     }
 }

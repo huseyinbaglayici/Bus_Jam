@@ -2,6 +2,7 @@
 using System.Linq;
 using _Scripts.Runtime.Data.UnityObjects;
 using _Scripts.Runtime.Enums;
+using _Scripts.Runtime.Extensions;
 using _Scripts.Runtime.Factories;
 using _Scripts.Runtime.Gameplay.Entities.Passenger;
 using _Scripts.Runtime.Signals;
@@ -87,10 +88,9 @@ namespace _Scripts.Runtime.Managers
 
         #region Signal Handlers
 
-        private int OnSendLineCount() => _lineCells.Count;
         private bool HandleHasAvailableSlot() => _lineSlots.Any(s => !s.IsOccupied);
         private void HandleBusLeft(EntityColor color) => _isBusDeparting = true;
-        private void HandleBusArrived(EntityColor color) => _isBusDeparting = true;
+        private void HandleBusArrived(EntityColor color) => _isBusDeparting = false;
 
         private void CheckLineForMatchingPassengers(EntityColor busColor)
         {
@@ -157,13 +157,15 @@ namespace _Scripts.Runtime.Managers
 
         private void OnDisable()
         {
-            if (!CoreGameSignals.IsAvailable) return;
-            CoreGameSignals.Instance.OnGridReady -= GenerateLine;
-            LineSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
-            LineSignals.Instance.OnGetSlotPosition -= HandleGetSlotPosition;
-            BusSignals.Instance.OnBusArrived -= CheckLineForMatchingPassengers;
-            BusSignals.Instance.OnBusLeft -= HandleBusLeft;
-            BusSignals.Instance.OnBusArrived -= HandleBusArrived;
+            if (!ApplicationState.IsQuitting)
+            {
+                CoreGameSignals.Instance.OnGridReady -= GenerateLine;
+                LineSignals.Instance.OnHasAvailableSlot -= HandleHasAvailableSlot;
+                LineSignals.Instance.OnGetSlotPosition -= HandleGetSlotPosition;
+                BusSignals.Instance.OnBusArrived -= CheckLineForMatchingPassengers;
+                BusSignals.Instance.OnBusLeft -= HandleBusLeft;
+                BusSignals.Instance.OnBusArrived -= HandleBusArrived;
+            }
         }
     }
 }
