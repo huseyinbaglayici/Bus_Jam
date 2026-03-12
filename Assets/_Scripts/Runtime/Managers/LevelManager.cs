@@ -17,6 +17,7 @@ namespace _Scripts.Runtime.Managers
         private LevelLoaderCommand _levelLoaderCommand;
         private int _currentLevel;
         private bool _isLoading;
+        private int _totalLevelCount;
 
         private void Awake() => _levelLoaderCommand = new LevelLoaderCommand(this);
 
