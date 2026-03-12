@@ -28,7 +28,7 @@ namespace _Scripts.Runtime.Managers
     {
         [SerializeField] private GameObject lineCellPrefab;
         private const float LineZOffset = 3f;
-        private const float LineXOffset = 1.1f;
+        private const string LineHolderName = "LineHolder";
 
         private readonly List<GameObject> _lineCells = new List<GameObject>();
         private readonly List<LineSlot> _lineSlots = new List<LineSlot>();
@@ -53,37 +53,34 @@ namespace _Scripts.Runtime.Managers
         private void GenerateLine(LevelDataSO levelData, int gridXCount, int gridZCount)
         {
             CreateHolder();
+            float centerX = (gridZCount - 1) * ConstantUtil.SpaceModifier / 2f;
+            float lineZ = (gridXCount - 1) * ConstantUtil.SpaceModifier + LineZOffset;
 
-            float gridCenterX = (((gridXCount - 1) * ConstantUtil.SpaceModifier) / 2f) * LineXOffset;
-            float gridTopZ = (gridZCount - 1) * ConstantUtil.SpaceModifier;
-
-            _lineHolder.position = new Vector3(gridCenterX, 0, gridTopZ + LineZOffset);
-
-            SpawnLineCells(levelData.PassengerLineCapacity);
+            _lineHolder.position = new Vector3(centerX, 0f, lineZ);
+            SpawnLineCells(levelData.PassengerLineCapacity, centerX, lineZ);
         }
 
-        private void SpawnLineCells(int capacity)
+        private void SpawnLineCells(int capacity, float centerX, float lineZ)
         {
             foreach (var cell in _lineCells) Destroy(cell);
             _lineCells.Clear();
             _lineSlots.Clear();
 
             float totalWidth = (capacity - 1) * ConstantUtil.SpaceModifier;
-            float startX = -(totalWidth / 2f);
+            float startX = centerX - totalWidth / 2f;
 
             for (int i = 0; i < capacity; i++)
             {
-                Vector3 localPos = new Vector3(startX + i * ConstantUtil.SpaceModifier, 0, 0);
+                Vector3 worldPos = new Vector3(startX + i * ConstantUtil.SpaceModifier, 0f, lineZ);
 
-                GameObject spawnedCell = _lineFactory.CreateLineCell(_lineHolder, localPos);
-                spawnedCell.transform.localPosition = localPos;
+                GameObject spawnedCell = _lineFactory.CreateLineCell(_lineHolder, worldPos);
 
                 _lineCells.Add(spawnedCell);
-                _lineSlots.Add(new LineSlot(_lineHolder.TransformPoint(localPos)));
+                _lineSlots.Add(new LineSlot(worldPos));
             }
         }
 
-        private void CreateHolder() => _lineHolder = new GameObject("LineHolder").transform;
+        private void CreateHolder() => _lineHolder = new GameObject(LineHolderName).transform;
 
         #endregion
 

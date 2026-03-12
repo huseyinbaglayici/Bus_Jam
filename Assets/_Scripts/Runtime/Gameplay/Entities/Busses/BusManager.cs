@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Runtime.Data.UnityObjects;
-using _Scripts.Runtime.Data.ValueObjects;
 using _Scripts.Runtime.Enums;
 using _Scripts.Runtime.Factories;
 using _Scripts.Runtime.Signals;
@@ -13,6 +12,7 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
     public class BusManager : MonoBehaviour
     {
         [Header("Prefab")] [SerializeField] private GameObject busPrefab;
+        private const string BusHolderName = "BusHolder";
 
         [Header("Color Database")] [SerializeField]
         private ColorDatabaseSO colorDatabase;
@@ -75,8 +75,8 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
         private void CalculateStationPosition(int gridXCount, int gridZCount)
         {
-            float gridCenterX = ((gridXCount - 1) * ConstantUtil.SpaceModifier) / 2f;
-            float gridTopZ = (gridZCount - 1) * ConstantUtil.SpaceModifier;
+            float gridCenterX = ((gridZCount - 1) * ConstantUtil.SpaceModifier) / 2f;
+            float gridTopZ = (gridXCount - 1) * ConstantUtil.SpaceModifier;
             _stationPosition = new Vector3(gridCenterX, StationYOffset, gridTopZ + StationZOffset)
                                + _pivotCorrectionOffset;
         }
@@ -94,12 +94,12 @@ namespace _Scripts.Runtime.Gameplay.Entities.Busses
 
                 busController.Initialize(busData.color);
                 _busQueue.Enqueue(busController);
-                
+
                 BusSignals.Instance.FireOnBusIncoming(busController.BusColor);
             }
         }
 
-        private void CreateHolder() => _busHolder = new GameObject("BusHolder").transform;
+        private void CreateHolder() => _busHolder = new GameObject(BusHolderName).transform;
 
         #endregion
 

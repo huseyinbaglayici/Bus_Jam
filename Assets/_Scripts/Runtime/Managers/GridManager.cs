@@ -17,6 +17,8 @@ namespace _Scripts.Runtime.Managers
         [SerializeField] private GameObject obstructedPrefab;
         [SerializeField] private GameObject passengerPrefab;
 
+        private const string GridHolderName = "GridHolder";
+
         [Header("Color Database")] [SerializeField]
         private ColorDatabaseSO colorDatabase;
 
@@ -73,7 +75,7 @@ namespace _Scripts.Runtime.Managers
             }
         }
 
-        private void CreateHolder() => _gridHolder = new GameObject(ConstantUtil.GridHolderName).transform;
+        private void CreateHolder() => _gridHolder = new GameObject(GridHolderName).transform;
 
         #endregion
 
